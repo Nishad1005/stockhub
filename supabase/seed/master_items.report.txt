@@ -1,0 +1,19 @@
+master_items import report
+==========================
+CSV source            : C:\Users\nalaw\Downloads\Stock_Analysis (5).csv
+v0.1 master entries   : 2027 (codes up to ITM-02027)
+Raw data rows         : 4565
+  blank product name  : 0 (skipped)
+  duplicate identity  : 4 (collapsed; same SKU or, if no SKU, same name)
+Unique master items   : 4561
+ITM codes reused (name matched v0.1) : 1744
+ITM codes newly assigned             : 2817  (ITM-02028 .. ITM-04844)
+Items with no SKU      : 122
+Items with blank category : 1919
+Items with pipe '|' category (multi-value, stored as-is) : 1858
+Same-name-but-new-code (name matched v0.1 but ITM already claimed by another SKU): 0
+Duplicate rows collapsed (first 30):
+   SKU:UM-000740  Packing FOAM 1.5MM X 1.5 MTR
+   SKU:UNM/SKU/24-25/1162  Packing FOAM 2MM X 1.5 MTR (m)
+   SKU:UM-000127  Thread 704687-124 Tera 20 (600 METER) (m)
+   SKU:UNM/SKU/23-24/876  PACKING PAPPER PAPER 23X36 INCH (38 GSM)

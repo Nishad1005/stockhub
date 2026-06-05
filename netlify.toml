@@ -1,0 +1,14 @@
+# Netlify config for the StockHub web build (Vite SPA).
+# Used when you connect a Git repo. For drag-and-drop of the local `dist/`
+# folder, the public/_redirects file handles SPA routing instead.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA fallback so deep links (/items, /capture) resolve to the app.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Camera (getUserMedia) needs a secure context — Netlify serves HTTPS by default.
