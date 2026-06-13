@@ -44,3 +44,23 @@ export function searchMaster(
 
   return [...starts, ...contains].slice(0, limit);
 }
+
+/**
+ * Exact lookup for a scanned item barcode. Physical item labels encode the
+ * StockHub code (e.g. "ITM-01132"), so we match `code` first, then fall back to
+ * the factory ERP `sku`. Case-insensitive, whitespace-trimmed. Returns null if
+ * nothing matches (caller treats it as a NEW, un-mastered item).
+ */
+export function findMasterByCode(
+  items: readonly MasterItem[],
+  raw: string | null | undefined,
+): MasterItem | null {
+  const q = String(raw ?? "").trim().toUpperCase();
+  if (!q) return null;
+  let skuHit: MasterItem | null = null;
+  for (const it of items) {
+    if ((it.code || "").toUpperCase() === q) return it;
+    if (!skuHit && (it.sku || "").toUpperCase() === q) skuHit = it;
+  }
+  return skuHit;
+}

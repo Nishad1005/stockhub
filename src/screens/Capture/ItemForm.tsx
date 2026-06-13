@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { ZONE_INDEX } from "@/constants/zones";
 import { MasterSearch } from "@/components/MasterSearch";
 import { PhotoCapture } from "@/components/PhotoCapture";
+import { CameraScanner } from "@/components/CameraScanner";
+import { useMasterItems } from "@/hooks/useMasterItems";
+import { findMasterByCode } from "@/lib/masterSearch";
+import { validateShelf } from "@/lib/shelf-validator";
 import { toast } from "@/stores/toast";
 import type { MasterItem } from "@/types/master";
 
@@ -35,6 +39,9 @@ export function ItemForm({ activeZone, submitting, onSubmit }: ItemFormProps) {
   const [photo, setPhoto] = useState<string | null>(null);
   const [masterCode, setMasterCode] = useState<string | null>(null);
   const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
+  const [scanOpen, setScanOpen] = useState(false);
+
+  const { data: master = [] } = useMasterItems();
 
   // Prefill category from the zone default when empty (v0.1 selectZone/applyShelfFromInput).
   useEffect(() => {
@@ -55,6 +62,27 @@ export function ItemForm({ activeZone, submitting, onSubmit }: ItemFormProps) {
     setName(v);
     // Typing a fresh name clears a prior master match (v0.1 behavior).
     if (masterCode) setMasterCode(null);
+  }
+
+  // Scan a printed item label (encodes the StockHub code, e.g. "ITM-01132").
+  function onItemScan(decoded: string) {
+    setScanOpen(false);
+    // A location code scanned here is almost certainly a mistake — guide the user.
+    if (validateShelf(decoded).ok) {
+      toast("That's a shelf code — use 📷 Scan at the top to set the shelf", "warn");
+      return;
+    }
+    const hit = findMasterByCode(master, decoded);
+    if (hit) {
+      pick(hit);
+      toast(`Matched ${hit.code}`, "ok");
+      return;
+    }
+    // Unknown code → keep it as a scanned barcode; worker types the name.
+    setMasterCode(null);
+    setScannedBarcode(decoded.trim());
+    toast(`Scanned ${decoded.trim()} — not in master, type the item name`, "warn");
+    setTimeout(() => document.getElementById(NAME_INPUT_ID)?.focus(), 50);
   }
 
   async function save() {
@@ -94,6 +122,13 @@ export function ItemForm({ activeZone, submitting, onSubmit }: ItemFormProps) {
           Item name <span className="text-brand-bad">*</span>
         </label>
         <MasterSearch inputId={NAME_INPUT_ID} value={name} onChange={onNameChange} onPick={pick} autoFocus />
+        <button
+          type="button"
+          onClick={() => setScanOpen(true)}
+          className="mt-2 w-full rounded-lg border border-brand-line py-2 text-sm font-semibold text-brand-ink"
+        >
+          📷 Scan item barcode
+        </button>
         {badge && (
           <span className={`inline-block mt-2 text-xs font-semibold rounded px-2 py-0.5 ${badge.cls}`}>
             {badge.text}
@@ -154,6 +189,13 @@ export function ItemForm({ activeZone, submitting, onSubmit }: ItemFormProps) {
       >
         {submitting ? "Saving…" : "Save entry"}
       </button>
+
+      <CameraScanner
+        open={scanOpen}
+        title="Scan item barcode"
+        onClose={() => setScanOpen(false)}
+        onDetected={onItemScan}
+      />
     </div>
   );
 }
