@@ -53,6 +53,9 @@ export function MasterSearch({ value, onChange, onPick, placeholder, inputId, au
                 <div className="text-xs text-brand-mute">
                   {(it.definition ?? "—") + " · " + (it.category ?? "—")}
                 </div>
+                {it.section && (
+                  <div className="text-[10px] text-brand-accent-2 font-medium mt-0.5">🏠 {it.section}</div>
+                )}
               </button>
             </li>
           ))}

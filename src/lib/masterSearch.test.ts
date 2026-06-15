@@ -5,6 +5,7 @@ import type { MasterItem } from "@/types/master";
 const mk = (p: Partial<MasterItem> & { code: string; name: string }): MasterItem => ({
   definition: null,
   category: null,
+  section: null,
   unit: null,
   sku: null,
   ...p,

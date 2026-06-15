@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ZONE_INDEX } from "@/constants/zones";
 import { useEntries } from "@/hooks/useEntries";
+import { useMasterItems } from "@/hooks/useMasterItems";
 import { useSessionStore } from "@/stores/session";
 import { filterEntries, entryCounts, type EntryStatusFilter } from "@/lib/entryFilters";
 import { isEntryLocked } from "@/lib/editLock";
@@ -9,16 +10,40 @@ import { EditEntryModal } from "./EditEntryModal";
 
 export function ItemsScreen() {
   const { data: entries = [], isLoading, error } = useEntries();
+  const { data: master = [] } = useMasterItems();
   const [zone, setZone] = useState("all");
   const [status, setStatus] = useState<EntryStatusFilter>("all");
+  const [section, setSection] = useState("all");
   const [editing, setEditing] = useState<EntryRow | null>(null);
 
   const editLockHours = useSessionStore((s) => s.editLockHours);
   const manualEntryMode = useSessionStore((s) => s.manualEntryMode);
   const unlockedEntryIds = useSessionStore((s) => s.unlockedEntryIds);
 
+  // Section (home area) lives on master_items, so resolve it per entry via master_code.
+  const sectionByCode = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const it of master) if (it.section) m.set(it.code, it.section);
+    return m;
+  }, [master]);
+  const entrySection = (e: EntryRow) => (e.master_code ? sectionByCode.get(e.master_code) ?? null : null);
+
   const counts = useMemo(() => entryCounts(entries), [entries]);
-  const filtered = useMemo(() => filterEntries(entries, { zone, status }), [entries, zone, status]);
+  const sectionsPresent = useMemo(() => {
+    const s = new Set<string>();
+    for (const e of entries) {
+      const sec = e.master_code ? sectionByCode.get(e.master_code) : undefined;
+      if (sec) s.add(sec);
+    }
+    return [...s].sort();
+  }, [entries, sectionByCode]);
+
+  const filtered = useMemo(() => {
+    const base = filterEntries(entries, { zone, status });
+    if (section === "all") return base;
+    return base.filter((e) => entrySection(e) === section);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries, zone, status, section, sectionByCode]);
   const rows = useMemo(() => [...filtered].reverse(), [filtered]); // newest first (v0.1)
 
   const zonesPresent = Object.keys(counts.byZone).sort();
@@ -51,6 +76,16 @@ export function ItemsScreen() {
             </button>
           ))}
         </div>
+        {sectionsPresent.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            <button className={chip(section === "all")} onClick={() => setSection("all")}>All Areas</button>
+            {sectionsPresent.map((s) => (
+              <button key={s} className={chip(section === s)} onClick={() => setSection(s)}>
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <main className="px-4 pb-24 pt-2 max-w-md mx-auto">
@@ -65,6 +100,7 @@ export function ItemsScreen() {
             const locked = isEntryLocked(e, { editLockHours, manualEntryMode, unlockedEntryIds });
             const code = e.master_code ?? e.assigned_code;
             const tags = [e.defn, e.category].filter(Boolean).join(" · ");
+            const sec = entrySection(e);
             return (
               <li key={e.id}>
                 <button
@@ -94,6 +130,7 @@ export function ItemsScreen() {
                       {ZONE_INDEX[e.zone_code]?.code ?? e.zone_code}
                       {tags ? " · " + tags : ""}
                     </div>
+                    {sec && <div className="text-[11px] text-brand-accent-2 truncate">🏠 {sec}</div>}
                   </div>
                   <div className={`text-sm font-semibold shrink-0 ${e.qty != null ? "text-brand-ink" : "text-brand-mute"}`}>
                     {e.qty != null ? e.qty : "—"}

@@ -39,6 +39,7 @@ export function ItemForm({ activeZone, submitting, onSubmit }: ItemFormProps) {
   const [photo, setPhoto] = useState<string | null>(null);
   const [masterCode, setMasterCode] = useState<string | null>(null);
   const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
+  const [homeSection, setHomeSection] = useState<string | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
 
   const { data: master = [] } = useMasterItems();
@@ -55,13 +56,17 @@ export function ItemForm({ activeZone, submitting, onSubmit }: ItemFormProps) {
     if (it.definition) setDefn(it.definition);
     if (it.category) setCategory(it.category);
     setMasterCode(it.code);
+    setHomeSection(it.section);
     setScannedBarcode(null);
   }
 
   function onNameChange(v: string) {
     setName(v);
     // Typing a fresh name clears a prior master match (v0.1 behavior).
-    if (masterCode) setMasterCode(null);
+    if (masterCode) {
+      setMasterCode(null);
+      setHomeSection(null);
+    }
   }
 
   // Scan a printed item label (encodes the StockHub code, e.g. "ITM-01132").
@@ -80,6 +85,7 @@ export function ItemForm({ activeZone, submitting, onSubmit }: ItemFormProps) {
     }
     // Unknown code → keep it as a scanned barcode; worker types the name.
     setMasterCode(null);
+    setHomeSection(null);
     setScannedBarcode(decoded.trim());
     toast(`Scanned ${decoded.trim()} — not in master, type the item name`, "warn");
     setTimeout(() => document.getElementById(NAME_INPUT_ID)?.focus(), 50);
@@ -101,6 +107,7 @@ export function ItemForm({ activeZone, submitting, onSubmit }: ItemFormProps) {
       setPhoto(null);
       setMasterCode(null);
       setScannedBarcode(null);
+      setHomeSection(null);
       setTimeout(() => document.getElementById(NAME_INPUT_ID)?.focus(), 50);
     } catch {
       /* error toast handled by caller; keep the form intact */
@@ -133,6 +140,11 @@ export function ItemForm({ activeZone, submitting, onSubmit }: ItemFormProps) {
           <span className={`inline-block mt-2 text-xs font-semibold rounded px-2 py-0.5 ${badge.cls}`}>
             {badge.text}
           </span>
+        )}
+        {homeSection && (
+          <p className="mt-1.5 text-xs text-brand-mute">
+            🏠 Home area: <span className="font-semibold text-brand-accent-2">{homeSection}</span>
+          </p>
         )}
       </div>
 
