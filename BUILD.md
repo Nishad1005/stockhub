@@ -1,8 +1,10 @@
 # BUILD.md — StockHub v0.2 Build Plan
 
-> **Current phase**: 🟢 Phases 1–4 + 7 done — Capture, Items/edit/delete, **Barcodes** (assign ITM codes + PDF labels), auth, tab nav. Supabase live (`ocqfpmealzautpsvxuij`); 4,561-item master seeded; `npm run build` green (29 tests). **Mobile-first next**: deploy to Netlify (HTTPS → phone camera) + push migration 0007 (item-code sequence). Remaining: Phase 5 (Dashboard), Phase 6 (Transfers), Phase 8 (Settings), Phase 9+ (native).
+> **Current phase**: 🟢 Phases 1–5 + 7 done + **live on Netlify** — Capture (incl. item-barcode scan), Items/edit/delete + section filter, **Find/Dashboard**, **Barcodes** (assign ITM codes + PDF labels), auth, tab nav. Supabase live (`ocqfpmealzautpsvxuij`); 4,561-item master **enriched** with 6-category + 13-section taxonomy (migration 0008 + `master_enrichment.sql`, applied); `npm run build` green (29 tests). Tested on phone via Netlify HTTPS — scanning + flows confirmed working. Remaining: Phase 6 (Transfers), Phase 8 (Settings), Phase 9+ (native), plus cosmetic real zone names.
 > **Started**: TBD
 > **Target v0.2 launch**: TBD
+>
+> See [`docs/STATUS.md`](docs/STATUS.md) for a plain-language status + getting-started guide.
 
 This is the living build plan. Update the status table and check off tasks as
 you complete them. Each phase has acceptance criteria — do not move to the
@@ -19,7 +21,7 @@ next phase until they're met.
 | 2 | Auth + roles (storekeeper, manager, admin) | 3-4 h | ⬜ |
 | 3 | Port Capture screen | 6-8 h | ⬜ |
 | 4 | Port Items + Edit modal + Edit-lock | 4-5 h | ⬜ |
-| 5 | Port Dashboard | 3-4 h | ⬜ |
+| 5 | Port Dashboard (Find) | 3-4 h | 🟢 done |
 | 6 | Port Transfers + STN workflow | 5-7 h | ⬜ |
 | 7 | Port Barcodes + label printing | 3-4 h | ⬜ |
 | 8 | Port Settings + Access Controls | 2-3 h | ⬜ |
@@ -199,18 +201,22 @@ photo upload needs it.
 spec: `docs/migration/05-dashboard.md`.
 
 ### Tasks
-- [ ] `DashboardScreen` — 5 cards as in v0.1
-- [ ] `ItemsByZoneChart` (Recharts BarChart)
-- [ ] `NewVsExistingBar` (custom split bar)
-- [ ] `TopBottomShelves` (two-column list)
-- [ ] `WhereIsThisItem` (search with grouped results)
-- [ ] `RecentActivity` (merged captures + transfers feed)
-- [ ] `useDashboardData` hook — single aggregated query
+- [x] `DashboardScreen` — "Find" tab: where-is-this-item, by-zone, NEW-vs-existing, fullest shelves, recent
+- [x] `WhereIsThisItem` (search + scan, grouped by shelf)
+- [x] Items-by-zone bars + NEW-vs-existing split + fullest shelves
+- [x] `RecentActivity` (recent captures feed, last 15)
+- [x] Derived from `useEntries` (no separate aggregated query needed at this scale)
+- [ ] Recharts charts + transfers in the feed — deferred until Transfers (Phase 6) exists
 
 ### Acceptance
-- Each card matches v0.1 visually + functionally
-- Search debounced (250ms)
-- Recent activity sorted desc, capped at 20 items
+- [x] Where-is-this-item returns the shelf(s) for a typed/scanned item
+- [x] Search debounced (200ms)
+- [x] Recent activity sorted desc
+
+> **Stage B (master enrichment surfacing)** also shipped here: migration 0008 adds
+> `master_items.section`; `master_enrichment.sql` fills the 6-category + 13-section
+> taxonomy; Capture shows a 🏠 home-area hint on matches, Items shows it per row +
+> an "All Areas" filter.
 
 ---
 
