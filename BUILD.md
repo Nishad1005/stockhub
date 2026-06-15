@@ -1,6 +1,6 @@
 # BUILD.md — StockHub v0.2 Build Plan
 
-> **Current phase**: 🟢 Phases 1–5 + 7 done + **live on Netlify** — Capture (incl. item-barcode scan), Items/edit/delete + section filter, **Find/Dashboard**, **Barcodes** (assign ITM codes + PDF labels), auth, tab nav. Supabase live (`ocqfpmealzautpsvxuij`); 4,561-item master **enriched** with 6-category + 13-section taxonomy (migration 0008 + `master_enrichment.sql`, applied); `npm run build` green (29 tests). Tested on phone via Netlify HTTPS — scanning + flows confirmed working. Remaining: Phase 6 (Transfers), Phase 8 (Settings), Phase 9+ (native), plus cosmetic real zone names.
+> **Current phase**: 🟢 Phases 1–7 done + **live on Netlify** — Capture (incl. item-barcode scan), Items/edit/delete + section filter, **Transfers + STN**, **Find/Dashboard**, **Barcodes** (assign ITM codes + PDF labels), auth, tab nav (5 tabs). Supabase live (`ocqfpmealzautpsvxuij`); 4,561-item master **enriched** with 6-category + 13-section taxonomy (migration 0008 + `master_enrichment.sql`, applied); `npm run build` green (39 tests). Tested on phone via Netlify HTTPS — scanning + flows confirmed working. Remaining: Phase 8 (Settings/exports — incl. transfers CSV), Phase 9+ (native), plus cosmetic real zone names.
 > **Started**: TBD
 > **Target v0.2 launch**: TBD
 >
@@ -22,7 +22,7 @@ next phase until they're met.
 | 3 | Port Capture screen | 6-8 h | ⬜ |
 | 4 | Port Items + Edit modal + Edit-lock | 4-5 h | ⬜ |
 | 5 | Port Dashboard (Find) | 3-4 h | 🟢 done |
-| 6 | Port Transfers + STN workflow | 5-7 h | ⬜ |
+| 6 | Port Transfers + STN workflow | 5-7 h | 🟢 done |
 | 7 | Port Barcodes + label printing | 3-4 h | ⬜ |
 | 8 | Port Settings + Access Controls | 2-3 h | ⬜ |
 | 9 | Native barcode scanner (Capacitor MLKit) | 4-6 h | ⬜ |
@@ -222,16 +222,22 @@ spec: `docs/migration/05-dashboard.md`.
 
 ## Phase 6 — Transfers + STN workflow
 
-**Reference**: HTML lines 1870–2280. Migration spec: `docs/migration/06-transfers.md`.
+**Reference**: HTML lines 1870–2280. Spec: `docs/superpowers/specs/2026-06-15-transfers-stn-design.md`;
+plan: `docs/superpowers/plans/2026-06-15-transfers-stn.md`.
 
 ### Tasks
-- [ ] `TransfersScreen` with list of past STNs
-- [ ] `NewTransferModal` — item search, source shelf (scan), dest shelf (scan), qty, reason, names
-- [ ] STN number generation: Postgres sequence `stn_seq`, function `next_stn()`
-- [ ] Source-entry detection (warn if qty > available)
-- [ ] Transfer applies: decrement source qty, create dest entry (or increment if same item already there)
-- [ ] Transfer detail modal
-- [ ] CSV export of transfers
+- [x] `TransfersScreen` with list of past STNs + Today/Week/Total stats (`src/screens/Transfers/`)
+- [x] `NewTransferModal` — master search, source shelf (scan), dest shelf (scan), qty, reason, storekeeper/helper
+- [x] STN number generation: Postgres `stn_seq` + `next_stn_number()` (already in migration 0001 — server-side, monotonic)
+- [x] Source-entry detection (`findSourceEntry`; banner + confirm if qty > available)
+- [x] Transfer applies: insert STN row, decrement source entry, create dest entry (`useCreateTransfer`)
+- [x] `TransferDetailModal`
+- [x] Zone auto-derives from the scanned shelf (deviation from v0.1's zone dropdowns, per §5.2)
+- [ ] CSV export of transfers — moved to **Phase 8** (Settings/exports)
+
+> **Deferred:** the `running_stock` view double-counts a transfer (entries are mutated
+> *and* the view re-applies it). The view is unused until Phase 11, so reconcile it then —
+> see the design spec §7.
 
 ### Acceptance
 - STN number monotonic, format `STN/2026-06/0042`
