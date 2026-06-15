@@ -1,3 +1,9 @@
+import type { Database } from "./database";
+
+/** Generated row/insert shapes — the single source of truth for the DB. */
+export type TransferRow = Database["public"]["Tables"]["transfers"]["Row"];
+export type TransferInsert = Database["public"]["Tables"]["transfers"]["Insert"];
+
 /** A stock transfer between two locations — matches the `transfers` table. */
 export interface Transfer {
   id: string;

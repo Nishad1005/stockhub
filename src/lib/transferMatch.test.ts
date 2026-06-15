@@ -4,7 +4,6 @@ import type { EntryRow } from "@/types/entry";
 
 const mk = (p: Partial<EntryRow> & { id: string }): EntryRow =>
   ({
-    id: p.id,
     created_at: "2026-06-15T00:00:00Z",
     updated_at: "2026-06-15T00:00:00Z",
     created_by: "u1",
