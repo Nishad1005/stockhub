@@ -14,18 +14,20 @@ import type { MasterItem } from "@/types/master";
 export interface MovementModalProps {
   type: "IN" | "OUT";
   onClose: () => void;
+  initialItem?: { name: string; code: string | null; defn: string | null; category: string | null };
+  initialShelf?: string;
 }
 
-export function MovementModal({ type, onClose }: MovementModalProps) {
+export function MovementModal({ type, onClose, initialItem, initialShelf }: MovementModalProps) {
   const { data: entries = [] } = useEntries();
   const create = useCreateMovement();
   const manualEntryMode = useSessionStore((s) => s.manualEntryMode);
 
-  const [itemName, setItemName] = useState("");
-  const [itemCode, setItemCode] = useState<string | null>(null);
-  const [itemDefn, setItemDefn] = useState<string | null>(null);
-  const [itemCategory, setItemCategory] = useState<string | null>(null);
-  const [shelfCode, setShelfCode] = useState("");
+  const [itemName, setItemName] = useState(initialItem?.name ?? "");
+  const [itemCode, setItemCode] = useState<string | null>(initialItem?.code ?? null);
+  const [itemDefn, setItemDefn] = useState<string | null>(initialItem?.defn ?? null);
+  const [itemCategory, setItemCategory] = useState<string | null>(initialItem?.category ?? null);
+  const [shelfCode, setShelfCode] = useState(initialShelf ?? "");
   const [qty, setQty] = useState("");
   const [sourceOrDest, setSourceOrDest] = useState("");
   const [reason, setReason] = useState("");
