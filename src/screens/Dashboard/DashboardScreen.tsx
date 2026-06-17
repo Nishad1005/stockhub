@@ -1,6 +1,9 @@
 import { useMemo, useState } from "react";
 import { ZONE_INDEX } from "@/constants/zones";
 import { useEntries } from "@/hooks/useEntries";
+import { useMovements } from "@/hooks/useMovements";
+import { useAuth } from "@/hooks/useAuth";
+import { emptyLocations, discrepancies } from "@/lib/stockLevels";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { entryCode } from "@/hooks/useAssignItemCode";
 import { CameraScanner } from "@/components/CameraScanner";
@@ -13,6 +16,10 @@ import type { EntryRow } from "@/types/entry";
  */
 export function DashboardScreen() {
   const { data: entries = [], isLoading } = useEntries();
+  const { data: movements = [] } = useMovements();
+  const { isManager } = useAuth();
+  const empties = useMemo(() => emptyLocations(entries), [entries]);
+  const discreps = useMemo(() => discrepancies(movements).slice(0, 8), [movements]);
   const [query, setQuery] = useState("");
   const [scanOpen, setScanOpen] = useState(false);
   const q = useDebouncedValue(query.trim().toLowerCase(), 200);
@@ -98,6 +105,36 @@ export function DashboardScreen() {
       </header>
 
       <main className="px-4 pb-24 max-w-md mx-auto space-y-4">
+        {isManager && (empties.length > 0 || discreps.length > 0) && (
+          <section className="bg-white border-2 border-brand-warn/50 rounded-xl p-4">
+            <h2 className="text-xs font-bold uppercase tracking-wide text-brand-warn mb-2">⚠ Alerts</h2>
+            {empties.length > 0 && (
+              <div className="mb-3">
+                <div className="text-[11px] font-bold text-brand-bad mb-1">Empty locations ({empties.length})</div>
+                <ul className="text-sm space-y-0.5">
+                  {empties.slice(0, 8).map((x) => (
+                    <li key={x.shelf + x.name} className="truncate">
+                      {x.name} · <span className="font-mono text-brand-mute">{x.shelf}</span> — <span className="text-brand-bad">empty</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {discreps.length > 0 && (
+              <div>
+                <div className="text-[11px] font-bold text-brand-bad mb-1">Recent discrepancies ({discreps.length})</div>
+                <ul className="text-sm space-y-0.5">
+                  {discreps.map((d) => (
+                    <li key={d.id} className="truncate">
+                      <span className="font-mono text-xs">{d.ref}</span> · {d.name} @ <span className="font-mono">{d.shelf}</span> — issued {d.requested}, only {d.available} on hand
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </section>
+        )}
+
         {/* Where is this item? */}
         <section className="bg-white border border-brand-line rounded-xl p-4">
           <h2 className="text-xs font-bold uppercase tracking-wide text-brand-mute mb-2">Where is this item?</h2>
