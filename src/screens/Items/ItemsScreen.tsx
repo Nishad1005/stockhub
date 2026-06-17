@@ -6,7 +6,8 @@ import { useSessionStore } from "@/stores/session";
 import { filterEntries, entryCounts, type EntryStatusFilter } from "@/lib/entryFilters";
 import { isEntryLocked } from "@/lib/editLock";
 import type { EntryRow } from "@/types/entry";
-import { EditEntryModal } from "./EditEntryModal";
+import { ItemDetailModal } from "@/screens/ItemDetail/ItemDetailModal";
+import type { ItemSelector } from "@/lib/itemDetail";
 
 export function ItemsScreen() {
   const { data: entries = [], isLoading, error } = useEntries();
@@ -14,7 +15,7 @@ export function ItemsScreen() {
   const [zone, setZone] = useState("all");
   const [status, setStatus] = useState<EntryStatusFilter>("all");
   const [section, setSection] = useState("all");
-  const [editing, setEditing] = useState<EntryRow | null>(null);
+  const [detail, setDetail] = useState<ItemSelector | null>(null);
 
   const editLockHours = useSessionStore((s) => s.editLockHours);
   const manualEntryMode = useSessionStore((s) => s.manualEntryMode);
@@ -104,7 +105,7 @@ export function ItemsScreen() {
             return (
               <li key={e.id}>
                 <button
-                  onClick={() => setEditing(e)}
+                  onClick={() => setDetail({ code: e.master_code ?? e.assigned_code, name: e.name })}
                   className="w-full text-left bg-white border border-brand-line rounded-xl p-3 flex gap-3 items-center"
                 >
                   {e.photo_url ? (
@@ -142,7 +143,7 @@ export function ItemsScreen() {
         </ul>
       </main>
 
-      {editing && <EditEntryModal entry={editing} onClose={() => setEditing(null)} />}
+      {detail && <ItemDetailModal selector={detail} onClose={() => setDetail(null)} />}
     </div>
   );
 }
