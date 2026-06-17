@@ -6,6 +6,7 @@ import { useSessionStore } from "@/stores/session";
 import { isEntryLocked, entryAgeHours } from "@/lib/editLock";
 import { toast } from "@/stores/toast";
 import { errMessage } from "@/lib/errors";
+import { useAuth } from "@/hooks/useAuth";
 import type { EntryRow } from "@/types/entry";
 
 export interface EditEntryModalProps {
@@ -17,6 +18,7 @@ export interface EditEntryModalProps {
 export function EditEntryModal({ entry, onClose }: EditEntryModalProps) {
   const update = useUpdateEntry();
   const del = useDeleteEntry();
+  const { isManager } = useAuth();
 
   const editLockHours = useSessionStore((s) => s.editLockHours);
   const manualEntryMode = useSessionStore((s) => s.manualEntryMode);
@@ -79,15 +81,19 @@ export function EditEntryModal({ entry, onClose }: EditEntryModalProps) {
         {locked && (
           <div className="mb-3 rounded-lg border-l-4 border-brand-bad bg-brand-cream p-3 text-xs text-brand-bad">
             🔒 <b>Locked</b> — captured {ageHrs}h ago, beyond the {editLockHours}h edit window.
-            <button
-              onClick={() => {
-                unlockEntry(entry.id);
-                toast("Unlocked for this session", "ok");
-              }}
-              className="mt-2 w-full rounded-lg border border-brand-bad py-1.5 font-semibold"
-            >
-              🔓 Unlock
-            </button>
+            {isManager ? (
+              <button
+                onClick={() => {
+                  unlockEntry(entry.id);
+                  toast("Unlocked for this session", "ok");
+                }}
+                className="mt-2 w-full rounded-lg border border-brand-bad py-1.5 font-semibold"
+              >
+                🔓 Unlock
+              </button>
+            ) : (
+              <div className="mt-1">A manager can unlock this entry.</div>
+            )}
           </div>
         )}
 
