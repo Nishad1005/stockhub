@@ -6,6 +6,7 @@ const TABS = [
   { to: "/transfers", label: "Transfers", icon: "🔄" },
   { to: "/dashboard", label: "Find", icon: "🔍" },
   { to: "/barcodes", label: "Barcodes", icon: "🏷️" },
+  { to: "/settings", label: "Settings", icon: "⚙️" },
 ];
 
 /** Bottom navigation between the built screens (more tabs as phases land). */

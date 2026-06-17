@@ -12,6 +12,7 @@ import { ItemsScreen } from "@/screens/Items/ItemsScreen";
 import { BarcodesScreen } from "@/screens/Barcodes/BarcodesScreen";
 import { DashboardScreen } from "@/screens/Dashboard/DashboardScreen";
 import { TransfersScreen } from "@/screens/Transfers/TransfersScreen";
+import { SettingsScreen } from "@/screens/Settings/SettingsScreen";
 import { useAuth } from "@/hooks/useAuth";
 
 const queryClient = new QueryClient({
@@ -64,7 +65,7 @@ export function App() {
             <Route path="/transfers" element={protect(<TransfersScreen />)} />
             <Route path="/dashboard" element={protect(<DashboardScreen />)} />
             <Route path="/barcodes" element={protect(<BarcodesScreen />)} />
-            <Route path="/settings" element={protect(<Placeholder name="Settings" />)} />
+            <Route path="/settings" element={protect(<SettingsScreen />)} />
             <Route path="*" element={protect(<Placeholder name="404" />)} />
           </Routes>
           </ErrorBoundary>
