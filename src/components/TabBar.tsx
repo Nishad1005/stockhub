@@ -4,6 +4,7 @@ const TABS = [
   { to: "/capture", label: "Capture", icon: "📷" },
   { to: "/items", label: "Items", icon: "📦" },
   { to: "/transfers", label: "Transfers", icon: "🔄" },
+  { to: "/stock", label: "Stock", icon: "📊" },
   { to: "/dashboard", label: "Find", icon: "🔍" },
   { to: "/barcodes", label: "Barcodes", icon: "🏷️" },
   { to: "/settings", label: "Settings", icon: "⚙️" },
