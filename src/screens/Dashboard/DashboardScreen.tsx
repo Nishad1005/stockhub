@@ -4,6 +4,8 @@ import { useEntries } from "@/hooks/useEntries";
 import { useMovements } from "@/hooks/useMovements";
 import { useAuth } from "@/hooks/useAuth";
 import { emptyLocations, discrepancies } from "@/lib/stockLevels";
+import { ItemDetailModal } from "@/screens/ItemDetail/ItemDetailModal";
+import type { ItemSelector } from "@/lib/itemDetail";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { entryCode } from "@/hooks/useAssignItemCode";
 import { CameraScanner } from "@/components/CameraScanner";
@@ -22,6 +24,7 @@ export function DashboardScreen() {
   const discreps = useMemo(() => discrepancies(movements).slice(0, 8), [movements]);
   const [query, setQuery] = useState("");
   const [scanOpen, setScanOpen] = useState(false);
+  const [detail, setDetail] = useState<ItemSelector | null>(null);
   const q = useDebouncedValue(query.trim().toLowerCase(), 200);
 
   // ── Where is this item? — match captured entries by name / code ──
@@ -169,11 +172,15 @@ export function DashboardScreen() {
                         </span>
                       </div>
                       {items.map((e) => (
-                        <div key={e.id} className="text-sm text-brand-ink truncate">
+                        <button
+                          key={e.id}
+                          onClick={() => setDetail({ code: e.master_code ?? e.assigned_code, name: e.name })}
+                          className="block w-full text-left text-sm text-brand-ink truncate"
+                        >
                           {codeBadge(e)}
                           {e.name}
                           {e.qty != null && <span className="text-brand-mute"> · qty {e.qty}</span>}
-                        </div>
+                        </button>
                       ))}
                     </li>
                   ))}
@@ -264,6 +271,8 @@ export function DashboardScreen() {
           setQuery(decoded.trim());
         }}
       />
+
+      {detail && <ItemDetailModal selector={detail} onClose={() => setDetail(null)} />}
     </div>
   );
 }
