@@ -13,21 +13,23 @@ import type { MasterItem } from "@/types/master";
 
 export interface NewTransferModalProps {
   onClose: () => void;
+  initialItem?: { name: string; code: string | null; defn: string | null; category: string | null };
+  initialSourceShelf?: string;
 }
 
 type ScanTarget = "source" | "dest" | null;
 
 /** Record a new transfer — ports v0.1 openTransferModal + saveTransfer. */
-export function NewTransferModal({ onClose }: NewTransferModalProps) {
+export function NewTransferModal({ onClose, initialItem, initialSourceShelf }: NewTransferModalProps) {
   const { data: entries = [] } = useEntries();
   const create = useCreateTransfer();
   const manualEntryMode = useSessionStore((s) => s.manualEntryMode);
 
-  const [itemName, setItemName] = useState("");
-  const [itemCode, setItemCode] = useState<string | null>(null);
-  const [itemDefn, setItemDefn] = useState<string | null>(null);
-  const [itemCategory, setItemCategory] = useState<string | null>(null);
-  const [sourceShelf, setSourceShelf] = useState("");
+  const [itemName, setItemName] = useState(initialItem?.name ?? "");
+  const [itemCode, setItemCode] = useState<string | null>(initialItem?.code ?? null);
+  const [itemDefn, setItemDefn] = useState<string | null>(initialItem?.defn ?? null);
+  const [itemCategory, setItemCategory] = useState<string | null>(initialItem?.category ?? null);
+  const [sourceShelf, setSourceShelf] = useState(initialSourceShelf ?? "");
   const [destShelf, setDestShelf] = useState("");
   const [qty, setQty] = useState("");
   const [reason, setReason] = useState("");
