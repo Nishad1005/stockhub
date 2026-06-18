@@ -3,6 +3,7 @@ import { useUpdateUserRole } from "@/hooks/useUpdateUserRole";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/stores/toast";
 import { errMessage } from "@/lib/errors";
+import { RolePermissionsEditor } from "./RolePermissionsEditor";
 import type { UserRole } from "@/types/profile";
 
 const ROLES: UserRole[] = ["pending", "storekeeper", "manager", "admin"];
@@ -96,6 +97,8 @@ export function UsersScreen() {
             })}
           </ul>
         </section>
+
+        <RolePermissionsEditor />
       </main>
     </div>
   );
