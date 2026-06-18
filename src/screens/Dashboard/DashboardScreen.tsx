@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { ZONE_INDEX } from "@/constants/zones";
 import { useEntries } from "@/hooks/useEntries";
 import { useMovements } from "@/hooks/useMovements";
-import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { emptyLocations, discrepancies } from "@/lib/stockLevels";
 import { ItemDetailModal } from "@/screens/ItemDetail/ItemDetailModal";
 import type { ItemSelector } from "@/lib/itemDetail";
@@ -19,7 +19,7 @@ import type { EntryRow } from "@/types/entry";
 export function DashboardScreen() {
   const { data: entries = [], isLoading } = useEntries();
   const { data: movements = [] } = useMovements();
-  const { isManager } = useAuth();
+  const { can } = usePermissions();
   const empties = useMemo(() => emptyLocations(entries), [entries]);
   const discreps = useMemo(() => discrepancies(movements).slice(0, 8), [movements]);
   const [query, setQuery] = useState("");
@@ -108,7 +108,7 @@ export function DashboardScreen() {
       </header>
 
       <main className="px-4 pb-24 max-w-md mx-auto space-y-4">
-        {isManager && (empties.length > 0 || discreps.length > 0) && (
+        {can("view_alerts") && (empties.length > 0 || discreps.length > 0) && (
           <section className="bg-white border-2 border-brand-warn/50 rounded-xl p-4">
             <h2 className="text-xs font-bold uppercase tracking-wide text-brand-warn mb-2">⚠ Alerts</h2>
             {empties.length > 0 && (
