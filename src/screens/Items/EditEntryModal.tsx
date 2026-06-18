@@ -6,7 +6,7 @@ import { useSessionStore } from "@/stores/session";
 import { isEntryLocked, entryAgeHours } from "@/lib/editLock";
 import { toast } from "@/stores/toast";
 import { errMessage } from "@/lib/errors";
-import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import type { EntryRow } from "@/types/entry";
 
 export interface EditEntryModalProps {
@@ -18,7 +18,7 @@ export interface EditEntryModalProps {
 export function EditEntryModal({ entry, onClose }: EditEntryModalProps) {
   const update = useUpdateEntry();
   const del = useDeleteEntry();
-  const { isManager } = useAuth();
+  const { can } = usePermissions();
 
   const editLockHours = useSessionStore((s) => s.editLockHours);
   const manualEntryMode = useSessionStore((s) => s.manualEntryMode);
@@ -36,7 +36,7 @@ export function EditEntryModal({ entry, onClose }: EditEntryModalProps) {
 
   const locked = isEntryLocked(entry, { editLockHours, manualEntryMode, unlockedEntryIds });
   const ageHrs = Math.floor(entryAgeHours(entry.created_at));
-  const disabled = locked;
+  const disabled = locked || !can("edit_entry");
 
   async function save() {
     if (locked) {
@@ -81,7 +81,7 @@ export function EditEntryModal({ entry, onClose }: EditEntryModalProps) {
         {locked && (
           <div className="mb-3 rounded-lg border-l-4 border-brand-bad bg-brand-cream p-3 text-xs text-brand-bad">
             🔒 <b>Locked</b> — captured {ageHrs}h ago, beyond the {editLockHours}h edit window.
-            {isManager ? (
+            {can("unlock_entry") ? (
               <button
                 onClick={() => {
                   unlockEntry(entry.id);
@@ -162,9 +162,11 @@ export function EditEntryModal({ entry, onClose }: EditEntryModalProps) {
             </>
           ) : (
             <>
-              <button onClick={() => setConfirmDelete(true)} className="rounded-lg border border-brand-bad text-brand-bad px-4 py-2 text-sm font-semibold">
-                Delete
-              </button>
+              {can("delete_entry") && (
+                <button onClick={() => setConfirmDelete(true)} className="rounded-lg border border-brand-bad text-brand-bad px-4 py-2 text-sm font-semibold">
+                  Delete
+                </button>
+              )}
               <button onClick={save} disabled={disabled || update.isPending} className="flex-1 rounded-lg bg-brand-accent-2 text-white py-2 text-sm font-semibold disabled:opacity-60">
                 {update.isPending ? "Saving…" : "Save changes"}
               </button>
