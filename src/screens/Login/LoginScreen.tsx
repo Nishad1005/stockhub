@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth";
 import { loginSchema } from "@/lib/validators/auth";
 
@@ -101,7 +101,7 @@ export function LoginScreen() {
         </form>
 
         <p className="text-xs text-brand-mute text-center mt-4">
-          Accounts are provisioned by your administrator.
+          New here? <Link to="/signup" className="font-semibold text-brand-accent-2">Create account</Link>
         </p>
       </div>
     </div>

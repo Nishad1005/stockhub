@@ -14,6 +14,7 @@ import { DashboardScreen } from "@/screens/Dashboard/DashboardScreen";
 import { TransfersScreen } from "@/screens/Transfers/TransfersScreen";
 import { SettingsScreen } from "@/screens/Settings/SettingsScreen";
 import { StockScreen } from "@/screens/Stock/StockScreen";
+import { SignUpScreen } from "@/screens/Login/SignUpScreen";
 import { useAuth } from "@/hooks/useAuth";
 
 const queryClient = new QueryClient({
@@ -60,6 +61,7 @@ export function App() {
           <ErrorBoundary>
           <Routes>
             <Route path="/login" element={<LoginScreen />} />
+            <Route path="/signup" element={<SignUpScreen />} />
             <Route path="/" element={<Navigate to="/capture" replace />} />
             <Route path="/capture" element={protect(<CaptureScreen />)} />
             <Route path="/items" element={protect(<ItemsScreen />)} />
