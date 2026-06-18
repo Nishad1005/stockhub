@@ -3,6 +3,7 @@ import { useEntries } from "@/hooks/useEntries";
 import { useMovements } from "@/hooks/useMovements";
 import { useTransfers } from "@/hooks/useTransfers";
 import { itemLocations, itemActivity, type ItemSelector } from "@/lib/itemDetail";
+import { usePermissions } from "@/hooks/usePermissions";
 import { ZONE_INDEX } from "@/constants/zones";
 import { NewTransferModal } from "@/screens/Transfers/NewTransferModal";
 import { MovementModal } from "@/screens/Stock/MovementModal";
@@ -26,6 +27,7 @@ export function ItemDetailModal({ selector, onClose }: ItemDetailModalProps) {
   const { data: movements = [] } = useMovements();
   const { data: transfers = [] } = useTransfers();
   const [action, setAction] = useState<Action>(null);
+  const { can } = usePermissions();
 
   const locations = useMemo(() => itemLocations(entries, selector), [entries, selector]);
   const activity = useMemo(() => itemActivity(movements, transfers, selector), [movements, transfers, selector]);
@@ -59,7 +61,7 @@ export function ItemDetailModal({ selector, onClose }: ItemDetailModalProps) {
 
           <div className="flex items-center justify-between mt-2 mb-3">
             <div className="text-xs text-brand-mute">Total on hand: <span className="font-mono font-bold text-brand-ink">{total}</span></div>
-            <button onClick={() => setAction({ kind: "in" })} className="rounded-lg bg-brand-ok text-white font-semibold px-3 py-1.5 text-xs">📥 Stock IN</button>
+            {can("stock_in") && <button onClick={() => setAction({ kind: "in" })} className="rounded-lg bg-brand-ok text-white font-semibold px-3 py-1.5 text-xs">📥 Stock IN</button>}
           </div>
 
           <div className="text-[10px] font-bold uppercase tracking-wide text-brand-mute mb-1">Locations</div>
@@ -73,9 +75,9 @@ export function ItemDetailModal({ selector, onClose }: ItemDetailModalProps) {
                     <div className="text-sm font-mono font-bold text-brand-ink">{e.shelf_code}</div>
                     <div className="text-[11px] text-brand-mute">{ZONE_INDEX[e.zone_code]?.name ?? e.zone_code} · qty {e.qty ?? "—"}</div>
                   </div>
-                  <button onClick={() => setAction({ kind: "transfer", entry: e })} className={actBtn}>Move</button>
-                  <button onClick={() => setAction({ kind: "out", entry: e })} className={actBtn}>Out</button>
-                  <button onClick={() => setAction({ kind: "edit", entry: e })} className={actBtn}>Edit</button>
+                  {can("transfer") && <button onClick={() => setAction({ kind: "transfer", entry: e })} className={actBtn}>Move</button>}
+                  {can("stock_out") && <button onClick={() => setAction({ kind: "out", entry: e })} className={actBtn}>Out</button>}
+                  {can("edit_entry") && <button onClick={() => setAction({ kind: "edit", entry: e })} className={actBtn}>Edit</button>}
                 </li>
               ))}
             </ul>
