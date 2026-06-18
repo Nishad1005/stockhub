@@ -8,7 +8,7 @@ import { MasterDataCard } from "./MasterDataCard";
 import { AboutCard } from "./AboutCard";
 
 export function SettingsScreen() {
-  const { isManager, isAdmin } = useAuth();
+  const { isManager, isAdmin, user, role, signOut } = useAuth();
   return (
     <div className="min-h-screen bg-brand-cream text-brand-ink">
       <header className="px-4 pt-5 pb-2">
@@ -28,6 +28,17 @@ export function SettingsScreen() {
           </Card>
         )}
         <AboutCard />
+
+        <Card title="Account">
+          <div className="text-sm text-brand-ink">{user?.email}</div>
+          {role && <div className="text-[11px] text-brand-mute capitalize mb-3">Role: {role}</div>}
+          <button
+            onClick={() => void signOut()}
+            className="w-full rounded-lg border border-brand-bad text-brand-bad py-2 text-sm font-semibold"
+          >
+            Sign out
+          </button>
+        </Card>
       </main>
     </div>
   );
