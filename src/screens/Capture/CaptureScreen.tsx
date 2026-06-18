@@ -4,6 +4,7 @@ import { FIXTURE_NAMES } from "@/constants/shelf";
 import { useCaptureSession } from "@/stores/captureSession";
 import { useSessionStore } from "@/stores/session";
 import { useCreateEntry } from "@/hooks/useCreateEntry";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useUsbScanner } from "@/hooks/useUsbScanner";
 import { CameraScanner } from "@/components/CameraScanner";
 import { uploadEntryPhoto } from "@/lib/photo";
@@ -23,6 +24,7 @@ export function CaptureScreen() {
   const manualEntryMode = useSessionStore((s) => s.manualEntryMode);
   const setManualEntryMode = useSessionStore((s) => s.setManualEntryMode);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const { can, isLoading: permsLoading } = usePermissions();
 
   // Shared shelf-apply with toasts (used by camera, USB, and manual typing).
   function applyShelfWithToast(raw: string) {
@@ -95,13 +97,21 @@ export function CaptureScreen() {
       </header>
 
       <main className="px-4 pb-24 max-w-md mx-auto">
-        <ShelfCard onScanClick={() => setScannerOpen(true)} onApplyShelf={applyShelfWithToast} />
-        {ready ? (
-          <ItemForm activeZone={activeZone} submitting={createEntry.isPending} onSubmit={handleSubmit} />
-        ) : (
+        {permsLoading ? null : !can("capture") ? (
           <p className="text-sm text-brand-mute text-center mt-8">
-            Scan a shelf barcode to start capturing items.
+            You don't have permission to capture items.
           </p>
+        ) : (
+          <>
+            <ShelfCard onScanClick={() => setScannerOpen(true)} onApplyShelf={applyShelfWithToast} />
+            {ready ? (
+              <ItemForm activeZone={activeZone} submitting={createEntry.isPending} onSubmit={handleSubmit} />
+            ) : (
+              <p className="text-sm text-brand-mute text-center mt-8">
+                Scan a shelf barcode to start capturing items.
+              </p>
+            )}
+          </>
         )}
       </main>
 

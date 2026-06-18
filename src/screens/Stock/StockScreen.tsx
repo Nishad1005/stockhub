@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePermissions } from "@/hooks/usePermissions";
 import { MovementModal } from "./MovementModal";
 import { StockLevels } from "./StockLevels";
 import { MovementHistory } from "./MovementHistory";
@@ -6,6 +7,7 @@ import { MovementHistory } from "./MovementHistory";
 export function StockScreen() {
   const [movement, setMovement] = useState<"IN" | "OUT" | null>(null);
   const [tab, setTab] = useState<"levels" | "history">("levels");
+  const { can } = usePermissions();
 
   const seg = (active: boolean) =>
     `flex-1 rounded-lg py-1.5 text-sm font-semibold ${active ? "bg-brand-accent-2 text-white" : "text-brand-ink"}`;
@@ -19,10 +21,12 @@ export function StockScreen() {
       </header>
 
       <main className="px-4 pb-24 max-w-md mx-auto space-y-4">
-        <div className="flex gap-2">
-          <button onClick={() => setMovement("IN")} className="flex-1 rounded-xl bg-brand-ok text-white font-semibold py-3 text-sm">📥 Stock IN</button>
-          <button onClick={() => setMovement("OUT")} className="flex-1 rounded-xl bg-brand-bad text-white font-semibold py-3 text-sm">📤 Stock OUT</button>
-        </div>
+        {(can("stock_in") || can("stock_out")) && (
+          <div className="flex gap-2">
+            {can("stock_in") && <button onClick={() => setMovement("IN")} className="flex-1 rounded-xl bg-brand-ok text-white font-semibold py-3 text-sm">📥 Stock IN</button>}
+            {can("stock_out") && <button onClick={() => setMovement("OUT")} className="flex-1 rounded-xl bg-brand-bad text-white font-semibold py-3 text-sm">📤 Stock OUT</button>}
+          </div>
+        )}
 
         <div className="flex gap-1 bg-brand-accent-soft/50 rounded-xl p-1">
           <button onClick={() => setTab("levels")} className={seg(tab === "levels")}>Stock levels</button>

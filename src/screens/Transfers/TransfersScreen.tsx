@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTransfers } from "@/hooks/useTransfers";
+import { usePermissions } from "@/hooks/usePermissions";
 import { transferStats } from "@/lib/transferStats";
 import { NewTransferModal } from "./NewTransferModal";
 import { TransferDetailModal } from "./TransferDetailModal";
@@ -7,6 +8,7 @@ import type { TransferRow } from "@/types/transfer";
 
 export function TransfersScreen() {
   const { data: transfers = [], isLoading, error } = useTransfers();
+  const { can } = usePermissions();
   const [showNew, setShowNew] = useState(false);
   const [detail, setDetail] = useState<TransferRow | null>(null);
 
@@ -26,9 +28,11 @@ export function TransfersScreen() {
             <span className="text-xs font-bold uppercase tracking-wide text-brand-mute">
               {stats.total} transfer{stats.total === 1 ? "" : "s"}
             </span>
-            <button onClick={() => setShowNew(true)} className="rounded-lg bg-brand-accent-2 text-white font-semibold px-3 py-1.5 text-sm">
-              ＋ New Transfer
-            </button>
+            {can("transfer") && (
+              <button onClick={() => setShowNew(true)} className="rounded-lg bg-brand-accent-2 text-white font-semibold px-3 py-1.5 text-sm">
+                ＋ New Transfer
+              </button>
+            )}
           </div>
           <div className="grid grid-cols-3 gap-2">
             {[
