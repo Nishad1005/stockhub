@@ -3,6 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth";
 import { useAuth } from "@/hooks/useAuth";
 import type { UserRole } from "@/types/profile";
+import { PendingApprovalScreen } from "@/screens/Pending/PendingApprovalScreen";
 import { Splash } from "./Splash";
 
 export interface ProtectedRouteProps {
@@ -21,6 +22,9 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   if (status === "signed-out") {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
+
+  if (profileLoading) return <Splash message="Loading…" />;
+  if (role === "pending") return <PendingApprovalScreen />;
 
   if (allowedRoles) {
     if (profileLoading) return <Splash message="Checking access…" />;
