@@ -3,6 +3,7 @@ import { ZONES, ZONE_INDEX } from "@/constants/zones";
 import { FIXTURE_NAMES } from "@/constants/shelf";
 import { useCaptureSession } from "@/stores/captureSession";
 import { useSessionStore } from "@/stores/session";
+import { useShelfChecker } from "@/hooks/useShelves";
 
 export interface ShelfCardProps {
   /** Open the camera scanner (shelf mode). */
@@ -16,6 +17,7 @@ export function ShelfCard({ onScanClick, onApplyShelf }: ShelfCardProps) {
   const { activeZone, activeShelf, activeFixtureType, setZone, clearShelf } = useCaptureSession();
   const manualEntryMode = useSessionStore((s) => s.manualEntryMode);
   const [draft, setDraft] = useState(activeShelf ?? "");
+  const checkShelf = useShelfChecker();
 
   // Keep the editable draft in sync when the shelf changes from a scan.
   useEffect(() => {
@@ -131,6 +133,10 @@ export function ShelfCard({ onScanClick, onApplyShelf }: ShelfCardProps) {
             </span>
           )}
         </div>
+
+        {activeShelf && checkShelf(activeShelf) === false && (
+          <div className="mt-1 text-xs text-brand-warn">⚠ Not a registered shelf</div>
+        )}
       </div>
     </div>
   );

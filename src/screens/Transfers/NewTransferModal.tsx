@@ -4,6 +4,7 @@ import { CameraScanner } from "@/components/CameraScanner";
 import { useEntries } from "@/hooks/useEntries";
 import { useCreateTransfer } from "@/hooks/useCreateTransfer";
 import { useSessionStore } from "@/stores/session";
+import { useShelfChecker } from "@/hooks/useShelves";
 import { findSourceEntry } from "@/lib/transferMatch";
 import { validateShelf } from "@/lib/shelf-validator";
 import { ZONE_INDEX } from "@/constants/zones";
@@ -24,6 +25,7 @@ export function NewTransferModal({ onClose, initialItem, initialSourceShelf }: N
   const { data: entries = [] } = useEntries();
   const create = useCreateTransfer();
   const manualEntryMode = useSessionStore((s) => s.manualEntryMode);
+  const checkShelf = useShelfChecker();
 
   const [itemName, setItemName] = useState(initialItem?.name ?? "");
   const [itemCode, setItemCode] = useState<string | null>(initialItem?.code ?? null);
@@ -127,6 +129,7 @@ export function NewTransferModal({ onClose, initialItem, initialSourceShelf }: N
                 <button onClick={() => setScan("source")} className="rounded-lg bg-brand-accent-2 text-white px-3 text-sm">📷</button>
               </div>
               {sourceZone && <div className="text-[11px] text-brand-mute mt-0.5">{sourceZone} · {ZONE_INDEX[sourceZone]?.name}</div>}
+              {checkShelf(sourceShelf) === false && <div className="text-[11px] text-brand-warn mt-0.5">⚠ Not a registered shelf</div>}
             </div>
             <div className="flex-1">
               <label className="block text-xs font-semibold text-brand-ok mb-1">To shelf *</label>
@@ -141,6 +144,7 @@ export function NewTransferModal({ onClose, initialItem, initialSourceShelf }: N
                 <button onClick={() => setScan("dest")} className="rounded-lg bg-brand-accent-2 text-white px-3 text-sm">📷</button>
               </div>
               {destZone && <div className="text-[11px] text-brand-mute mt-0.5">{destZone} · {ZONE_INDEX[destZone]?.name}</div>}
+              {checkShelf(destShelf) === false && <div className="text-[11px] text-brand-warn mt-0.5">⚠ Not a registered shelf</div>}
             </div>
           </div>
 

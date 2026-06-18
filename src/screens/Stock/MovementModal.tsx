@@ -4,6 +4,7 @@ import { CameraScanner } from "@/components/CameraScanner";
 import { useEntries } from "@/hooks/useEntries";
 import { useCreateMovement } from "@/hooks/useCreateMovement";
 import { useSessionStore } from "@/stores/session";
+import { useShelfChecker } from "@/hooks/useShelves";
 import { findSourceEntry } from "@/lib/transferMatch";
 import { validateShelf } from "@/lib/shelf-validator";
 import { ZONE_INDEX } from "@/constants/zones";
@@ -22,6 +23,7 @@ export function MovementModal({ type, onClose, initialItem, initialShelf }: Move
   const { data: entries = [] } = useEntries();
   const create = useCreateMovement();
   const manualEntryMode = useSessionStore((s) => s.manualEntryMode);
+  const checkShelf = useShelfChecker();
 
   const [itemName, setItemName] = useState(initialItem?.name ?? "");
   const [itemCode, setItemCode] = useState<string | null>(initialItem?.code ?? null);
@@ -114,6 +116,7 @@ export function MovementModal({ type, onClose, initialItem, initialShelf }: Move
               <button onClick={() => setScanOpen(true)} className="rounded-lg bg-brand-accent-2 text-white px-3 text-sm">📷</button>
             </div>
             {zone && <div className="text-[11px] text-brand-mute mt-0.5">{zone} · {ZONE_INDEX[zone]?.name}</div>}
+            {checkShelf(shelfCode) === false && <div className="text-[11px] text-brand-warn mt-0.5">⚠ Not a registered shelf</div>}
           </div>
 
           {shelfCode && (itemCode || itemName.trim()) && (
