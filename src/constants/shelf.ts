@@ -4,7 +4,7 @@
  * Ported from v0.1: `legacy/UM_Designs_StockHub.html` (search SHELF_RE).
  *
  * DO NOT change without updating CLAUDE.md §5.1 and notifying the team.
- * The 703 already-printed physical labels assume this format.
+ * The 612 already-printed physical labels (Z01–Z06) assume this format.
  */
 
 export const SHELF_RE = /^Z(\d+)-([SGPR])(\d+)$/i;
@@ -25,7 +25,7 @@ export const FIXTURE_HEADERS: Record<FixtureType, string> = {
   R: "RACK LOCATION",
 };
 
-/** Single-letter counter word used on physical labels ("Shelf 5 of 207"). */
+/** Single-letter counter word used on physical labels ("Shelf 5 of 116"). */
 export const FIXTURE_COUNTER_WORDS: Record<FixtureType, string> = {
   S: "Shelf",
   G: "Ghoda",
