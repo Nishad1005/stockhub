@@ -3,7 +3,7 @@ export {
   Search, Plus, Check, X, Trash2, Camera, ArrowRight, ArrowLeftRight,
   ArrowDown, ArrowUp, AlertTriangle,
   Package, BarChart3, Settings, Tag, LayoutGrid, MapPin, Lock, Home, ChevronRight,
-  Download, ShieldCheck,
+  Download, ShieldCheck, Clock, CheckCircle, Users,
 } from "lucide-react";
 import { Camera, Package, ArrowLeftRight, BarChart3, Search, Tag, Settings } from "lucide-react";
 
