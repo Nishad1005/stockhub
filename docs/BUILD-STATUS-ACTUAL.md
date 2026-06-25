@@ -20,7 +20,7 @@ Status legend:
 | 5 | USB/Bluetooth scanner | ✅ |
 | 6 | Manual-entry mode (manager toggle) | ✅ |
 | 7 | Master typeahead | ✅ |
-| 8 | Photo capture → Storage → entries.photo_url | ⚠️ |
+| 8 | Photo capture → Storage → entries.photo_url | ✅ |
 | 9 | Items list (browse / filter / edit / delete) | ✅ |
 | 10 | Edit-lock window | ✅ |
 | 11 | Item Detail modal + one-tap actions | ✅ |
@@ -38,7 +38,11 @@ Status legend:
 | 23 | Native iOS / Android (Capacitor) | ❌ |
 | 24 | Offline-first (SQLite mirror) | ❌ |
 
-Counts: ✅ 18 · 🟡 3 · ⚠️ 1 · ❌ 2
+Counts: ✅ 19 · 🟡 3 · ⚠️ 0 · ❌ 2
+
+> Update 2026-06-26: item 8 (photo capture) moved ⚠️ → ✅ after the owner created the
+> `entry-photos` Storage bucket in the live project and confirmed a photo-attached
+> capture now saves. The bucket is still created by no migration (see §3/§8).
 
 ---
 
@@ -72,7 +76,7 @@ route on main**. `src/components/TabBar.tsx` renders **7 tabs**.
 - File: `src/screens/Capture/CaptureScreen.tsx`, routed at `App.tsx:67`.
 - Reachable: shelf scan (camera + USB + manual), sticky shelf, zone auto-derive, item form. Gated by `can("capture")` (`CaptureScreen.tsx:97`).
 - Deep dive in §3.
-- Not wired vs doc: nothing missing; see §3 for the photo-bucket caveat.
+- Not wired vs doc: nothing missing. The photo path depends on the `entry-photos` Storage bucket, confirmed created in the live project on 2026-06-26 (see §3).
 
 ### Items (`/items`) — ✅ Live
 - File: `src/screens/Items/ItemsScreen.tsx`, routed at `App.tsx:68`.
@@ -150,7 +154,7 @@ export function searchMaster(items, query, limit = MASTER_MAX_RESULTS): MasterIt
 
 - Behavior: needs ≥ 4 chars; "startsWith" ranks above "includes"; matches name/code/sku/definition; capped at 12.
 
-### Photo capture — ⚠️ Partial (wired in code; depends on an unmigrated Storage bucket)
+### Photo capture — ✅ Live (bucket confirmed present 2026-06-26)
 Walk-through:
 1. `ItemForm.tsx:196` renders `<PhotoCapture value={photo} onChange={setPhoto} />`.
 2. `PhotoCapture.tsx` offers two hidden file inputs — "Camera" (`capture="environment"`, `:67-74`) and "Gallery" (`:75-81`). On pick it runs `compressImage` (`lib/photo.ts:13`, max 1024x1024, JPEG q0.75) and stores a data-URL in form state.
@@ -158,7 +162,16 @@ Walk-through:
 4. `uploadEntryPhoto` (`photo.ts:55-64`) PUTs the blob to Supabase Storage bucket `entry-photos` at `<uid>/<uuid>.jpg` and returns the public URL.
 5. The URL is written to `entries.photo_url` via `useCreateEntry.ts:44` (`photo_url: v.photoUrl`). The column exists in migration `0001_initial_schema.sql`.
 
-Why ⚠️ not ✅: the `entry-photos` bucket is created by **no migration** (`photo.ts:11` constant + header comment "Requires a Storage bucket named entry-photos (user action)"). The end-to-end code path is complete and correct, but it depends on an owner-provisioned bucket that source cannot confirm exists in the live project. If the bucket is missing, uploads fail (the save then aborts, `CaptureScreen.tsx:56-59`).
+Status (2026-06-26): the end-to-end code path is complete and correct, and the
+`entry-photos` bucket — created by **no migration** (`photo.ts:11` + header note "user
+action") — was **manually created in the live Supabase project** (public, with
+authenticated-insert + public-read policies). A photo-attached capture now saves and the
+thumbnail displays. Originally this was ⚠️ because the bucket did not exist: a
+photo-attached save failed with "Bucket not found", and since the upload runs before the
+insert, the **whole entry save aborted** (`CaptureScreen.tsx:55-59`). Two caveats remain:
+(1) the bucket is owner-provisioned, so a fresh environment must recreate it (no migration
+does); (2) a Storage failure still aborts the entire entry save rather than degrading to a
+photo-less save — a hardening candidate.
 
 ### What does the operator photograph?
 - The photo control sits inside the per-item form under the label "Photo" (`ItemForm.tsx:195`). Buttons read "Camera" / "Gallery" (`PhotoCapture.tsx:56,62`); the preview `alt` is "capture" (`:40`). The item-name field placeholder is "Type item name (4+ chars) or scan…" (`MasterSearch.tsx:29`).
@@ -302,7 +315,7 @@ One line per non-test file in `src/lib/` (and `src/lib/validators/`).
 
 ## 8. Honest gaps (claims I could not fully verify from source)
 
-- **`entry-photos` Storage bucket exists in the live project.** Code uploads to it (`photo.ts:62`), but no migration creates it. Cannot confirm from the repo whether the owner created it in Supabase. To confirm: check the Supabase project's Storage buckets, or attempt a real photo capture on the live site. If absent, all photo captures fail at save.
+- **`entry-photos` Storage bucket — RESOLVED 2026-06-26.** It did not exist initially (photo-attached saves failed with "Bucket not found"); the owner created it (public, authenticated-insert + public-read) and a photo capture now saves. Still created by no migration, so a fresh environment must recreate it.
 - **Migrations 0001–0014 are actually applied to the live DB.** The repo holds the SQL; it cannot prove the owner ran `supabase db push`. Features depending on later migrations — `role_permissions` (0013), `shelves`/612-registry (0014), `app_settings` (0009), `available_qty` discrepancies (0010) — work only if those migrations are live. To confirm: query the live DB or exercise each feature on the deployed site.
 - **The 4,561-item master + the +316 June append are loaded.** The seed SQL exists; load is an owner step. To confirm: `select count(*) from master_items` on the live DB.
 - **`PROJECT-OVERVIEW.md`'s "current" navigation (5 tabs / Movements / More).** This describes `feat/nav-redesign`, which is unmerged. The deployed app is 7 tabs. The doc is ahead of `main`; treat its §3/§9 as aspirational until that branch merges.

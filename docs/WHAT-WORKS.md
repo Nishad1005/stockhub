@@ -84,7 +84,7 @@ The primary data-entry surface. End-to-end working:
 - **"Not a registered shelf" warning** when a scanned code isn't in the 612-shelf registry.
 - **Item entry** with a **master typeahead** (type 4+ chars → ranked matches from the 4,877-item catalogue) or **scan a printed item label**. A status badge shows **MATCHED / SCANNED / NEW**, and the item's "home area" (section) is surfaced when known.
 - **Fields:** name, definition, category (pre-filled from the zone), quantity, notes, and an optional **photo**.
-- **Photo:** snap with the camera or pick from the gallery; it's compressed on-device (max 1024×1024, JPEG) and uploaded to Supabase Storage, with the URL saved on the entry. The photo is **optional**. *(Dependency: requires the `entry-photos` Storage bucket to exist in the Supabase project — an owner-provisioned step.)*
+- **Photo:** snap with the camera or pick from the gallery; it's compressed on-device (max 1024×1024, JPEG) and uploaded to Supabase Storage, with the URL saved on the entry. The photo is **optional**. *(The `entry-photos` Storage bucket was created in the live project on 2026-06-26; photo-attached captures save and thumbnails display.)*
 - On save the item is written to Supabase and the form resets for the next item (keeping the sticky shelf and category).
 
 ### Items (`/items`) — browse, edit, delete
@@ -215,7 +215,7 @@ These are referenced somewhere but are **not** live capabilities today:
 
 ### Real-world dependencies to confirm on the live project
 The code is correct, but these owner-run steps can't be verified from source — confirm them on the deployed environment:
-- The **`entry-photos` Storage bucket** exists (else photo capture fails at save).
+- The **`entry-photos` Storage bucket** — confirmed present (created 2026-06-26); photo capture saves. (Still owner-provisioned — a fresh environment must recreate it.)
 - Migrations **0001–0014** are applied (else features on later tables — permissions matrix, shelf registry, discrepancies — won't work).
 - The **master catalogue + June append** are loaded (`select count(*) from master_items` should be ~4,877).
 
