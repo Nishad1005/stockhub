@@ -26,4 +26,14 @@ describe("buttonClasses", () => {
   it("fullWidth adds w-full", () => {
     expect(buttonClasses("primary", "md", true)).toContain("w-full");
   });
+  it("ok and bad are solid fills with white text (single bg, no white bg)", () => {
+    const ok = buttonClasses("ok", "md");
+    expect(ok).toContain("bg-brand-ok");
+    expect(ok).toContain("text-white");
+    expect(ok).not.toContain("bg-white");
+    const bad = buttonClasses("bad", "md");
+    expect(bad).toContain("bg-brand-bad");
+    expect(bad).toContain("text-white");
+    expect(bad).not.toContain("bg-white");
+  });
 });

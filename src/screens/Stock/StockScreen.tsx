@@ -26,24 +26,22 @@ export function StockScreen() {
           <div className="flex gap-2">
             {can("stock_in") && (
               <Button
-                variant="primary"
+                variant="ok"
                 size="md"
                 fullWidth
                 icon={<ArrowDown className="w-4 h-4" />}
                 onClick={() => setMovement("IN")}
-                className="bg-brand-ok border-0"
               >
                 Stock IN
               </Button>
             )}
             {can("stock_out") && (
               <Button
-                variant="danger"
+                variant="bad"
                 size="md"
                 fullWidth
                 icon={<ArrowUp className="w-4 h-4" />}
                 onClick={() => setMovement("OUT")}
-                className="bg-brand-bad text-white border-0"
               >
                 Stock OUT
               </Button>
