@@ -3,7 +3,7 @@ import { useMovements } from "@/hooks/useMovements";
 import { MovementDetailModal } from "./MovementDetailModal";
 import type { MovementRow } from "@/types/movement";
 import { Badge } from "@/components/ui/Badge";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "@/components/ui/icons";
 
 function isDiscrepancy(m: MovementRow): boolean {
   return m.type === "OUT" && m.available_qty != null && m.qty > m.available_qty;

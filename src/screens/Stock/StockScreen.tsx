@@ -7,7 +7,7 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { Card } from "@/components/ui/Card";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowUp } from "@/components/ui/icons";
 
 export function StockScreen() {
   const [movement, setMovement] = useState<"IN" | "OUT" | null>(null);
