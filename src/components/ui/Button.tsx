@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "ok" | "bad";
 export type ButtonSize = "sm" | "md";
 
 const VARIANT: Record<ButtonVariant, string> = {
@@ -8,6 +8,8 @@ const VARIANT: Record<ButtonVariant, string> = {
   secondary: "bg-white text-brand-ink border border-brand-line",
   ghost: "bg-transparent text-brand-accent-2",
   danger: "bg-white text-brand-bad border border-brand-bad/30",
+  ok: "bg-brand-ok text-white shadow-btn",
+  bad: "bg-brand-bad text-white shadow-btn",
 };
 const SIZE: Record<ButtonSize, string> = {
   sm: "px-3 py-1.5 text-xs",
