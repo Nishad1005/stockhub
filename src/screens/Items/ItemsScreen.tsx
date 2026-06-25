@@ -8,6 +8,10 @@ import { isEntryLocked } from "@/lib/editLock";
 import type { EntryRow } from "@/types/entry";
 import { ItemDetailModal } from "@/screens/ItemDetail/ItemDetailModal";
 import type { ItemSelector } from "@/lib/itemDetail";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { Chip } from "@/components/ui/Chip";
+import { Card } from "@/components/ui/Card";
+import { Package, Lock, Home } from "@/components/ui/icons";
 
 export function ItemsScreen() {
   const { data: entries = [], isLoading, error } = useEntries();
@@ -49,41 +53,32 @@ export function ItemsScreen() {
 
   const zonesPresent = Object.keys(counts.byZone).sort();
 
-  const chip = (active: boolean) =>
-    `px-3 py-1 rounded-full text-xs font-semibold border whitespace-nowrap ${
-      active ? "bg-brand-accent-2 text-white border-brand-accent-2" : "bg-white text-brand-ink border-brand-line"
-    }`;
-
   return (
     <div className="min-h-screen bg-brand-cream text-brand-ink">
-      <header className="px-4 pt-5 pb-2">
-        <div className="text-xs font-bold uppercase tracking-widest text-brand-mute">U&amp;M StockHub</div>
-        <h1 className="text-xl font-bold">Items</h1>
-        <p className="text-sm text-brand-mute">{filtered.length} of {entries.length} items</p>
-      </header>
+      <ScreenHeader title="Items" subtitle={`${filtered.length} of ${entries.length} items`} />
 
       {/* Filters */}
       <div className="px-4 space-y-2">
         <div className="flex gap-2 overflow-x-auto pb-1">
-          <button className={chip(status === "all")} onClick={() => setStatus("all")}>All {counts.total}</button>
-          <button className={chip(status === "new")} onClick={() => setStatus("new")}>NEW {counts.newItems}</button>
-          <button className={chip(status === "existing")} onClick={() => setStatus("existing")}>Existing {counts.existing}</button>
+          <Chip active={status === "all"} onClick={() => setStatus("all")}>All {counts.total}</Chip>
+          <Chip active={status === "new"} onClick={() => setStatus("new")}>NEW {counts.newItems}</Chip>
+          <Chip active={status === "existing"} onClick={() => setStatus("existing")}>Existing {counts.existing}</Chip>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1">
-          <button className={chip(zone === "all")} onClick={() => setZone("all")}>All Zones</button>
+          <Chip active={zone === "all"} onClick={() => setZone("all")}>All Zones</Chip>
           {zonesPresent.map((z) => (
-            <button key={z} className={chip(zone === z)} onClick={() => setZone(z)}>
+            <Chip key={z} active={zone === z} onClick={() => setZone(z)}>
               {z} {counts.byZone[z]}
-            </button>
+            </Chip>
           ))}
         </div>
         {sectionsPresent.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-1">
-            <button className={chip(section === "all")} onClick={() => setSection("all")}>All Areas</button>
+            <Chip active={section === "all"} onClick={() => setSection("all")}>All Areas</Chip>
             {sectionsPresent.map((s) => (
-              <button key={s} className={chip(section === s)} onClick={() => setSection(s)}>
+              <Chip key={s} active={section === s} onClick={() => setSection(s)}>
                 {s}
-              </button>
+              </Chip>
             ))}
           </div>
         )}
@@ -93,7 +88,10 @@ export function ItemsScreen() {
         {isLoading && <p className="text-sm text-brand-mute mt-8 text-center">Loading…</p>}
         {error && <p className="text-sm text-brand-bad mt-8 text-center">Failed to load items.</p>}
         {!isLoading && !error && rows.length === 0 && (
-          <p className="text-sm text-brand-mute mt-12 text-center">📦 No items match the current filter.</p>
+          <p className="text-sm text-brand-mute mt-12 text-center flex flex-col items-center gap-2">
+            <Package className="w-8 h-8 text-brand-mute" />
+            No items match the current filter.
+          </p>
         )}
 
         <ul className="space-y-2">
@@ -104,14 +102,13 @@ export function ItemsScreen() {
             const sec = entrySection(e);
             return (
               <li key={e.id}>
-                <button
-                  onClick={() => setDetail({ code: e.master_code ?? e.assigned_code, name: e.name })}
-                  className="w-full text-left bg-white border border-brand-line rounded-xl p-3 flex gap-3 items-center"
-                >
+                <Card onClick={() => setDetail({ code: e.master_code ?? e.assigned_code, name: e.name })} className="p-3 flex gap-3 items-center">
                   {e.photo_url ? (
                     <img src={e.photo_url} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" />
                   ) : (
-                    <div className="w-12 h-12 rounded-lg bg-brand-accent-soft flex items-center justify-center shrink-0">📦</div>
+                    <div className="w-12 h-12 rounded-lg bg-brand-accent-soft flex items-center justify-center shrink-0">
+                      <Package className="w-5 h-5 text-brand-mute" />
+                    </div>
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium text-brand-ink truncate">
@@ -123,7 +120,7 @@ export function ItemsScreen() {
                         {code ?? "NEW"}
                       </span>
                       {e.name}
-                      {locked && <span className="ml-1" title="Locked">🔒</span>}
+                      {locked && <Lock className="w-3 h-3 inline ml-1" />}
                     </div>
                     <div className="text-xs text-brand-mute truncate">
                       <span className="font-mono">{e.shelf_code}</span>
@@ -131,12 +128,16 @@ export function ItemsScreen() {
                       {ZONE_INDEX[e.zone_code]?.code ?? e.zone_code}
                       {tags ? " · " + tags : ""}
                     </div>
-                    {sec && <div className="text-[11px] text-brand-accent-2 truncate">🏠 {sec}</div>}
+                    {sec && (
+                      <div className="text-[11px] text-brand-accent-2 truncate flex items-center gap-1">
+                        <Home className="w-3 h-3 inline" /> {sec}
+                      </div>
+                    )}
                   </div>
                   <div className={`text-sm font-semibold shrink-0 ${e.qty != null ? "text-brand-ink" : "text-brand-mute"}`}>
                     {e.qty != null ? e.qty : "—"}
                   </div>
-                </button>
+                </Card>
               </li>
             );
           })}

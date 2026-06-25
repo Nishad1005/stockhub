@@ -8,6 +8,10 @@ import { findMasterByCode } from "@/lib/masterSearch";
 import { validateShelf } from "@/lib/shelf-validator";
 import { toast } from "@/stores/toast";
 import type { MasterItem } from "@/types/master";
+import { Button } from "@/components/ui/Button";
+import { Input, Label } from "@/components/ui/Field";
+import { Badge } from "@/components/ui/Badge";
+import { Camera, Home } from "@/components/ui/icons";
 
 export interface ItemFormPayload {
   name: string;
@@ -74,7 +78,7 @@ export function ItemForm({ activeZone, submitting, onSubmit }: ItemFormProps) {
     setScanOpen(false);
     // A location code scanned here is almost certainly a mistake — guide the user.
     if (validateShelf(decoded).ok) {
-      toast("That's a shelf code — use 📷 Scan at the top to set the shelf", "warn");
+      toast("That's a shelf code — use the Scan button at the top to set the shelf", "warn");
       return;
     }
     const hit = findMasterByCode(master, decoded);
@@ -114,93 +118,94 @@ export function ItemForm({ activeZone, submitting, onSubmit }: ItemFormProps) {
     }
   }
 
-  const badge = masterCode
-    ? { cls: "bg-brand-ok text-white", text: `✓ MATCHED ${masterCode}` }
+  const badgeInfo: { tone: "ok" | "warn" | "neutral"; text: string } | null = masterCode
+    ? { tone: "ok", text: `✓ MATCHED ${masterCode}` }
     : scannedBarcode
-      ? { cls: "bg-brand-accent-2 text-white", text: `📷 SCANNED ${scannedBarcode}` }
+      ? { tone: "neutral", text: `SCANNED ${scannedBarcode}` }
       : name.trim().length >= 4
-        ? { cls: "bg-brand-warn text-white", text: "★ NEW ITEM" }
+        ? { tone: "warn", text: "NEW ITEM" }
         : null;
 
   return (
     <div className="bg-white rounded-xl border border-brand-line p-4 space-y-3">
       <div>
-        <label htmlFor={NAME_INPUT_ID} className="block text-xs font-semibold text-brand-mute mb-1">
-          Item name <span className="text-brand-bad">*</span>
-        </label>
+        <Label htmlFor={NAME_INPUT_ID} required>Item name</Label>
         <MasterSearch inputId={NAME_INPUT_ID} value={name} onChange={onNameChange} onPick={pick} autoFocus />
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          fullWidth
+          size="sm"
+          icon={<Camera className="w-4 h-4" />}
           onClick={() => setScanOpen(true)}
-          className="mt-2 w-full rounded-lg border border-brand-line py-2 text-sm font-semibold text-brand-ink"
+          className="mt-2"
         >
-          📷 Scan item barcode
-        </button>
-        {badge && (
-          <span className={`inline-block mt-2 text-xs font-semibold rounded px-2 py-0.5 ${badge.cls}`}>
-            {badge.text}
-          </span>
+          Scan item barcode
+        </Button>
+        {badgeInfo && (
+          <Badge tone={badgeInfo.tone} className="mt-2">
+            {badgeInfo.text}
+          </Badge>
         )}
         {homeSection && (
-          <p className="mt-1.5 text-xs text-brand-mute">
-            🏠 Home area: <span className="font-semibold text-brand-accent-2">{homeSection}</span>
+          <p className="mt-1.5 text-xs text-brand-mute flex items-center gap-1">
+            <Home className="w-3 h-3" />
+            Home area: <span className="font-semibold text-brand-accent-2">{homeSection}</span>
           </p>
         )}
       </div>
 
       <div className="flex gap-2">
         <div className="flex-1">
-          <label className="block text-xs font-semibold text-brand-mute mb-1">Definition</label>
-          <input
+          <Label>Definition</Label>
+          <Input
             value={defn}
             onChange={(e) => setDefn(e.target.value)}
-            className="w-full rounded-lg border border-brand-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent"
           />
         </div>
         <div className="w-28">
-          <label className="block text-xs font-semibold text-brand-mute mb-1">Qty</label>
-          <input
+          <Label>Qty</Label>
+          <Input
             type="number"
             min={0}
             value={qty}
             onChange={(e) => setQty(e.target.value)}
             placeholder="—"
-            className="w-full rounded-lg border border-brand-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-brand-mute mb-1">Category</label>
-        <input
+        <Label>Category</Label>
+        <Input
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="w-full rounded-lg border border-brand-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent"
         />
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-brand-mute mb-1">Notes</label>
-        <input
+        <Label>Notes</Label>
+        <Input
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="w-full rounded-lg border border-brand-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent"
         />
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-brand-mute mb-1">Photo</label>
+        <Label>Photo</Label>
         <PhotoCapture value={photo} onChange={setPhoto} />
       </div>
 
-      <button
+      <Button
         type="button"
+        variant="primary"
+        fullWidth
         onClick={save}
         disabled={submitting}
-        className="w-full rounded-lg bg-brand-accent-2 text-white font-semibold py-2.5 text-sm disabled:opacity-60"
+        loading={submitting}
       >
         {submitting ? "Saving…" : "Save entry"}
-      </button>
+      </Button>
 
       <CameraScanner
         open={scanOpen}

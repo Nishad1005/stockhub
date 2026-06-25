@@ -4,6 +4,10 @@ import { FIXTURE_NAMES } from "@/constants/shelf";
 import { useCaptureSession } from "@/stores/captureSession";
 import { useSessionStore } from "@/stores/session";
 import { useShelfChecker } from "@/hooks/useShelves";
+import { Button } from "@/components/ui/Button";
+import { Input, Label } from "@/components/ui/Field";
+import { Badge } from "@/components/ui/Badge";
+import { Camera } from "@/components/ui/icons";
 
 export interface ShelfCardProps {
   /** Open the camera scanner (shelf mode). */
@@ -40,7 +44,7 @@ export function ShelfCard({ onScanClick, onApplyShelf }: ShelfCardProps) {
     <div className="bg-white rounded-xl border border-brand-line p-4 mb-4">
       {/* Zone */}
       <div className="mb-3">
-        <div className="text-xs font-semibold text-brand-mute mb-1">Zone</div>
+        <Label>Zone</Label>
         {manualEntryMode ? (
           <select
             value={activeZone ?? ""}
@@ -74,17 +78,18 @@ export function ShelfCard({ onScanClick, onApplyShelf }: ShelfCardProps) {
             Shelf / Fixture <span className="text-brand-bad">*</span>
           </span>
           {activeShelf && (
-            <button
+            <Button
               type="button"
+              variant="danger"
+              size="sm"
               onClick={clearShelf}
-              className="text-xs text-brand-bad font-semibold"
             >
               ✕ Clear
-            </button>
+            </Button>
           )}
         </div>
         <div className="flex gap-2">
-          <input
+          <Input
             type="text"
             value={draft}
             readOnly={!manualEntryMode}
@@ -94,48 +99,54 @@ export function ShelfCard({ onScanClick, onApplyShelf }: ShelfCardProps) {
             placeholder={manualEntryMode ? "Z1-S042" : "Tap Scan →"}
             spellCheck={false}
             autoCapitalize="characters"
-            className="flex-1 rounded-lg border border-brand-line px-3 py-2 text-sm font-mono font-bold uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-brand-accent read-only:bg-brand-cream"
+            mono
+            className="flex-1"
           />
           {manualEntryMode ? (
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="md"
               onClick={commitDraft}
               disabled={!draft.trim()}
-              className="rounded-lg bg-brand-accent-2 text-white font-semibold px-4 text-sm disabled:opacity-50"
             >
               ✓ Set
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="md"
+              icon={<Camera className="w-4 h-4" />}
               onClick={onScanClick}
-              className="rounded-lg bg-brand-accent-2 text-white font-semibold px-4 text-sm"
             >
-              📷 Scan
-            </button>
+              Scan
+            </Button>
           )}
         </div>
 
         <div className="mt-2 text-xs">
           {activeShelf ? (
-            <span className="text-brand-ok font-medium">
-              ✓ {activeFixtureType ? FIXTURE_NAMES[activeFixtureType] : "Location"}{" "}
+            <Badge tone="ok" dot>
+              {activeFixtureType ? FIXTURE_NAMES[activeFixtureType] : "Location"}{" "}
               <span className="font-mono">{activeShelf}</span> set — sticky for next entries
-            </span>
+            </Badge>
           ) : manualEntryMode ? (
-            <span className="text-brand-mute">
-              ⚠️ Manager mode — type a code like <span className="font-mono">Z1-S042</span> or scan.
-            </span>
+            <Badge tone="warn" dot>
+              Manager mode — type a code like <span className="font-mono">Z1-S042</span> or scan.
+            </Badge>
           ) : (
             <span className="text-brand-mute">
-              📷 Scan required — tap Scan or use a USB scanner (e.g.{" "}
+              Scan required — tap Scan or use a USB scanner (e.g.{" "}
               <span className="font-mono">Z3-S042</span>).
             </span>
           )}
         </div>
 
         {activeShelf && checkShelf(activeShelf) === false && (
-          <div className="mt-1 text-xs text-brand-warn">⚠ Not a registered shelf</div>
+          <div className="mt-1 text-xs">
+            <Badge tone="warn" dot>Not a registered shelf</Badge>
+          </div>
         )}
       </div>
     </div>

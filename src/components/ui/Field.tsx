@@ -23,14 +23,15 @@ export interface LabelProps {
   required?: boolean;
   tone?: "mute" | "ok" | "bad";
   className?: string;
+  htmlFor?: string;
   children: ReactNode;
 }
 
 const LABEL_TONE = { mute: "text-brand-mute", ok: "text-brand-ok", bad: "text-brand-bad" } as const;
 
-export function Label({ required, tone = "mute", className = "", children }: LabelProps) {
+export function Label({ required, tone = "mute", className = "", htmlFor, children }: LabelProps) {
   return (
-    <label className={`block text-xs font-semibold mb-1 ${LABEL_TONE[tone]} ${className}`}>
+    <label htmlFor={htmlFor} className={`block text-xs font-semibold mb-1 ${LABEL_TONE[tone]} ${className}`}>
       {children}
       {required && <span className="text-brand-bad"> *</span>}
     </label>

@@ -12,6 +12,8 @@ import { errMessage } from "@/lib/errors";
 import { toast } from "@/stores/toast";
 import { ShelfCard } from "./ShelfCard";
 import { ItemForm, type ItemFormPayload } from "./ItemForm";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { Button } from "@/components/ui/Button";
 
 /**
  * Capture screen — the primary data-entry surface (docs/migration/01-capture.md).
@@ -78,23 +80,18 @@ export function CaptureScreen() {
 
   return (
     <div className="min-h-screen bg-brand-cream text-brand-ink">
-      <header className="px-4 pt-5 pb-2 flex items-end justify-between">
-        <div>
-          <div className="text-xs font-bold uppercase tracking-widest text-brand-mute">U&amp;M StockHub</div>
-          <h1 className="text-xl font-bold">Capture</h1>
-        </div>
-        <button
-          type="button"
-          onClick={() => setManualEntryMode(!manualEntryMode)}
-          className={`rounded-lg px-3 py-1.5 text-xs font-semibold border ${
-            manualEntryMode
-              ? "bg-brand-warn text-white border-brand-warn"
-              : "border-brand-line text-brand-ink"
-          }`}
-        >
-          {manualEntryMode ? "⌨️ Manual ON" : "⌨️ Type shelf"}
-        </button>
-      </header>
+      <ScreenHeader
+        title="Capture"
+        action={
+          <Button
+            variant={manualEntryMode ? "danger" : "secondary"}
+            size="sm"
+            onClick={() => setManualEntryMode(!manualEntryMode)}
+          >
+            {manualEntryMode ? "⌨ Manual ON" : "⌨ Type shelf"}
+          </Button>
+        }
+      />
 
       <main className="px-4 pb-24 max-w-md mx-auto">
         {permsLoading ? null : !can("capture") ? (
