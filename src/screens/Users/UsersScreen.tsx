@@ -8,16 +8,9 @@ import type { UserRole } from "@/types/profile";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import type { BadgeTone } from "@/components/ui/Badge";
+import { ROLE_TONE } from "@/constants/roles";
 
 const ROLES: UserRole[] = ["pending", "storekeeper", "manager", "admin"];
-
-const ROLE_TONE: Record<UserRole, BadgeTone> = {
-  pending: "warn",
-  storekeeper: "neutral",
-  manager: "ok",
-  admin: "bad",
-};
 
 export function UsersScreen() {
   const { data: users = [], isLoading } = useUsers();

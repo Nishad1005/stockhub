@@ -8,11 +8,21 @@ export interface ModalProps {
   children: ReactNode;
 }
 
+// module-level stack of currently-open modal close handlers (top = last)
+const modalStack: Array<() => void> = [];
+
 export function Modal({ title, onClose, footer, children }: ModalProps) {
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    modalStack.push(onClose);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && modalStack[modalStack.length - 1] === onClose) onClose();
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      const i = modalStack.indexOf(onClose);
+      if (i !== -1) modalStack.splice(i, 1);
+    };
   }, [onClose]);
 
   return (

@@ -164,7 +164,7 @@ export function DashboardScreen() {
           {q.length >= 2 && (
             <div className="mt-3">
               {byLocation.length === 0 ? (
-                <p className="text-sm text-brand-mute">No captured items match &ldquo;{q}&rdquo;.</p>
+                <p className="text-sm text-brand-mute">No captured items match "{q}".</p>
               ) : (
                 <ul className="space-y-2">
                   {byLocation.map(([loc, items]) => (
@@ -248,7 +248,7 @@ export function DashboardScreen() {
         <Card className="p-4">
           <h2 className="text-xs font-bold uppercase tracking-wide text-brand-mute mb-2">Recent captures</h2>
           {isLoading ? (
-            <p className="text-sm text-brand-mute">Loading...</p>
+            <p className="text-sm text-brand-mute">Loading…</p>
           ) : recent.length === 0 ? (
             <p className="text-sm text-brand-mute">Nothing captured yet.</p>
           ) : (

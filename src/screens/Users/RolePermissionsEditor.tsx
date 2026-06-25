@@ -4,14 +4,7 @@ import { PERMISSIONS, EDITABLE_ROLES, type PermissionKey } from "@/constants/per
 import type { UserRole } from "@/types/profile";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import type { BadgeTone } from "@/components/ui/Badge";
-
-const ROLE_TONE: Record<UserRole, BadgeTone> = {
-  pending: "warn",
-  storekeeper: "neutral",
-  manager: "ok",
-  admin: "bad",
-};
+import { ROLE_TONE } from "@/constants/roles";
 
 export function RolePermissionsEditor() {
   const { data: map } = useRolePermissions();
