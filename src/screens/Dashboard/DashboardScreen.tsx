@@ -10,10 +10,16 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { entryCode } from "@/hooks/useAssignItemCode";
 import { CameraScanner } from "@/components/CameraScanner";
 import type { EntryRow } from "@/types/entry";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { SearchField } from "@/components/ui/SearchField";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Camera } from "@/components/ui/icons";
 
 /**
- * Dashboard — the lookup surface. Primary feature: "Where is this item?" (scan
- * or type → which shelf(s) it's on). Plus per-zone counts, NEW vs existing,
+ * Dashboard -- the lookup surface. Primary feature: "Where is this item?" (scan
+ * or type -> which shelf(s) it's on). Plus per-zone counts, NEW vs existing,
  * fullest shelves, and recent activity. All derived from entries.
  */
 export function DashboardScreen() {
@@ -27,7 +33,7 @@ export function DashboardScreen() {
   const [detail, setDetail] = useState<ItemSelector | null>(null);
   const q = useDebouncedValue(query.trim().toLowerCase(), 200);
 
-  // ── Where is this item? — match captured entries by name / code ──
+  // Where is this item? -- match captured entries by name / code
   const results = useMemo(() => {
     if (q.length < 2) return [];
     return entries.filter((e) => {
@@ -47,7 +53,7 @@ export function DashboardScreen() {
     return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   }, [results]);
 
-  // ── Aggregates ──
+  // Aggregates
   const stats = useMemo(() => {
     const byZone: Record<string, number> = {};
     const byShelf: Record<string, number> = {};
@@ -87,37 +93,32 @@ export function DashboardScreen() {
   const codeBadge = (e: EntryRow) => {
     const c = entryCode(e);
     return (
-      <span
-        className={`mr-1 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
-          c ? "bg-brand-ok/15 text-brand-ok" : "bg-brand-warn/15 text-brand-warn"
-        }`}
-      >
+      <Badge tone={c ? "ok" : "warn"} className="mr-1 font-mono text-[10px]">
         {c ?? "NEW"}
-      </span>
+      </Badge>
     );
   };
 
   return (
     <div className="min-h-screen bg-brand-cream text-brand-ink">
-      <header className="px-4 pt-5 pb-2">
-        <div className="text-xs font-bold uppercase tracking-widest text-brand-mute">U&amp;M StockHub</div>
-        <h1 className="text-xl font-bold">Dashboard</h1>
-        <p className="text-sm text-brand-mute">
-          {entries.length} entries · {stats.shelvesUsed} shelves used
-        </p>
-      </header>
+      <ScreenHeader
+        title="Dashboard"
+        subtitle={`${entries.length} entries · ${stats.shelvesUsed} shelves used`}
+      />
 
       <main className="px-4 pb-24 max-w-md mx-auto space-y-4">
         {can("view_alerts") && (empties.length > 0 || discreps.length > 0) && (
-          <section className="bg-white border-2 border-brand-warn/50 rounded-xl p-4">
-            <h2 className="text-xs font-bold uppercase tracking-wide text-brand-warn mb-2">⚠ Alerts</h2>
+          <Card className="border-2 border-brand-warn/50 p-4">
+            <h2 className="text-xs font-bold uppercase tracking-wide text-brand-warn mb-2">
+              Alerts
+            </h2>
             {empties.length > 0 && (
               <div className="mb-3">
                 <div className="text-[11px] font-bold text-brand-bad mb-1">Empty locations ({empties.length})</div>
                 <ul className="text-sm space-y-0.5">
                   {empties.slice(0, 8).map((x) => (
                     <li key={x.shelf + x.name} className="truncate">
-                      {x.name} · <span className="font-mono text-brand-mute">{x.shelf}</span> — <span className="text-brand-bad">empty</span>
+                      {x.name} &middot; <span className="font-mono text-brand-mute">{x.shelf}</span> &mdash; <span className="text-brand-bad">empty</span>
                     </li>
                   ))}
                 </ul>
@@ -129,38 +130,41 @@ export function DashboardScreen() {
                 <ul className="text-sm space-y-0.5">
                   {discreps.map((d) => (
                     <li key={d.id} className="truncate">
-                      <span className="font-mono text-xs">{d.ref}</span> · {d.name} @ <span className="font-mono">{d.shelf}</span> — issued {d.requested}, only {d.available} on hand
+                      <span className="font-mono text-xs">{d.ref}</span> &middot; {d.name} @ <span className="font-mono">{d.shelf}</span> &mdash; issued {d.requested}, only {d.available} on hand
                     </li>
                   ))}
                 </ul>
               </div>
             )}
-          </section>
+          </Card>
         )}
 
         {/* Where is this item? */}
-        <section className="bg-white border border-brand-line rounded-xl p-4">
+        <Card className="p-4">
           <h2 className="text-xs font-bold uppercase tracking-wide text-brand-mute mb-2">Where is this item?</h2>
-          <div className="flex gap-2">
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Type a name or code…"
-              className="flex-1 rounded-lg border border-brand-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent"
-            />
-            <button
+          <div className="flex gap-2 items-center">
+            <div className="flex-1">
+              <SearchField
+                value={query}
+                onChange={setQuery}
+                placeholder="Type a name or code..."
+              />
+            </div>
+            <Button
               type="button"
+              variant="primary"
+              size="sm"
+              icon={<Camera className="w-4 h-4" />}
               onClick={() => setScanOpen(true)}
-              className="rounded-lg bg-brand-accent-2 text-white font-semibold px-3 text-sm"
             >
               Scan
-            </button>
+            </Button>
           </div>
 
           {q.length >= 2 && (
             <div className="mt-3">
               {byLocation.length === 0 ? (
-                <p className="text-sm text-brand-mute">No captured items match “{q}”.</p>
+                <p className="text-sm text-brand-mute">No captured items match &ldquo;{q}&rdquo;.</p>
               ) : (
                 <ul className="space-y-2">
                   {byLocation.map(([loc, items]) => (
@@ -168,7 +172,7 @@ export function DashboardScreen() {
                       <div className="font-mono font-bold text-sm text-brand-accent-2">
                         {loc}
                         <span className="ml-1 font-sans font-normal text-brand-mute">
-                          · {ZONE_INDEX[items[0].zone_code]?.name ?? items[0].zone_code}
+                          &middot; {ZONE_INDEX[items[0].zone_code]?.name ?? items[0].zone_code}
                         </span>
                       </div>
                       {items.map((e) => (
@@ -179,7 +183,7 @@ export function DashboardScreen() {
                         >
                           {codeBadge(e)}
                           {e.name}
-                          {e.qty != null && <span className="text-brand-mute"> · qty {e.qty}</span>}
+                          {e.qty != null && <span className="text-brand-mute"> &middot; qty {e.qty}</span>}
                         </button>
                       ))}
                     </li>
@@ -188,10 +192,10 @@ export function DashboardScreen() {
               )}
             </div>
           )}
-        </section>
+        </Card>
 
         {/* Items by zone */}
-        <section className="bg-white border border-brand-line rounded-xl p-4">
+        <Card className="p-4">
           <h2 className="text-xs font-bold uppercase tracking-wide text-brand-mute mb-3">Items by zone</h2>
           {zoneRows.length === 0 ? (
             <p className="text-sm text-brand-mute">No items captured yet.</p>
@@ -208,10 +212,10 @@ export function DashboardScreen() {
               ))}
             </div>
           )}
-        </section>
+        </Card>
 
         {/* NEW vs existing */}
-        <section className="bg-white border border-brand-line rounded-xl p-4">
+        <Card className="p-4">
           <h2 className="text-xs font-bold uppercase tracking-wide text-brand-mute mb-2">NEW vs existing</h2>
           <div className="flex gap-3">
             <div className="flex-1 rounded-lg bg-brand-ok/10 p-3 text-center">
@@ -223,11 +227,11 @@ export function DashboardScreen() {
               <div className="text-xs text-brand-mute">NEW (need a code)</div>
             </div>
           </div>
-        </section>
+        </Card>
 
         {/* Fullest shelves */}
         {stats.topShelves.length > 0 && (
-          <section className="bg-white border border-brand-line rounded-xl p-4">
+          <Card className="p-4">
             <h2 className="text-xs font-bold uppercase tracking-wide text-brand-mute mb-2">Fullest shelves</h2>
             <ul className="text-sm divide-y divide-brand-line">
               {stats.topShelves.map((s) => (
@@ -237,14 +241,14 @@ export function DashboardScreen() {
                 </li>
               ))}
             </ul>
-          </section>
+          </Card>
         )}
 
         {/* Recent captures */}
-        <section className="bg-white border border-brand-line rounded-xl p-4">
+        <Card className="p-4">
           <h2 className="text-xs font-bold uppercase tracking-wide text-brand-mute mb-2">Recent captures</h2>
           {isLoading ? (
-            <p className="text-sm text-brand-mute">Loading…</p>
+            <p className="text-sm text-brand-mute">Loading...</p>
           ) : recent.length === 0 ? (
             <p className="text-sm text-brand-mute">Nothing captured yet.</p>
           ) : (
@@ -253,13 +257,13 @@ export function DashboardScreen() {
                 <li key={e.id} className="text-sm truncate">
                   {codeBadge(e)}
                   {e.name}
-                  <span className="text-brand-mute"> · </span>
+                  <span className="text-brand-mute"> &middot; </span>
                   <span className="font-mono text-xs text-brand-mute">{e.shelf_code}</span>
                 </li>
               ))}
             </ul>
           )}
-        </section>
+        </Card>
       </main>
 
       <CameraScanner

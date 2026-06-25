@@ -9,6 +9,10 @@ import { ShelfCoverage } from "./ShelfCoverage";
 import { toast } from "@/stores/toast";
 import { errMessage } from "@/lib/errors";
 import type { EntryRow } from "@/types/entry";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Download, Tag } from "@/components/ui/icons";
 
 function metaFor(e: EntryRow): string {
   return [e.defn, e.category, ZONE_INDEX[e.zone_code]?.code ?? e.zone_code].filter(Boolean).join(" · ");
@@ -76,35 +80,39 @@ export function BarcodesScreen() {
 
   return (
     <div className="min-h-screen bg-brand-cream text-brand-ink">
-      <header className="px-4 pt-5 pb-2">
-        <div className="text-xs font-bold uppercase tracking-widest text-brand-mute">U&amp;M StockHub</div>
-        <h1 className="text-xl font-bold">Barcodes</h1>
-        <p className="text-sm text-brand-mute">
-          {entries.length} items · {needing.length} need a code · {selected.size} selected
-        </p>
-      </header>
+      <ScreenHeader
+        title="Barcodes"
+        subtitle={`${entries.length} items · ${needing.length} need a code · ${selected.size} selected`}
+      />
 
       <div className="px-4 flex gap-2 flex-wrap">
-        <button
+        <Button
+          variant="primary"
+          size="sm"
           onClick={assignAll}
           disabled={busy || needing.length === 0}
-          className="rounded-lg bg-brand-accent-2 text-white px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
+          loading={busy}
         >
           {busy ? "Assigning…" : `Assign codes to ${needing.length} NEW`}
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={<Download className="w-4 h-4" />}
           onClick={download}
           disabled={selected.size === 0}
-          className="rounded-lg border border-brand-line px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
         >
-          ⬇ Download {selected.size} label{selected.size === 1 ? "" : "s"} (PDF)
-        </button>
+          Download {selected.size} label{selected.size === 1 ? "" : "s"} (PDF)
+        </Button>
       </div>
 
       <main className="px-4 pb-24 pt-3 max-w-md mx-auto">
         {isLoading && <p className="text-sm text-brand-mute text-center mt-8">Loading…</p>}
         {!isLoading && rows.length === 0 && (
-          <p className="text-sm text-brand-mute text-center mt-12">🏷️ No items captured yet.</p>
+          <p className="text-sm text-brand-mute text-center mt-12 flex flex-col items-center gap-2">
+            <Tag className="w-8 h-8 text-brand-mute" />
+            No items captured yet.
+          </p>
         )}
 
         <ul className="space-y-2">
@@ -112,46 +120,50 @@ export function BarcodesScreen() {
             const code = entryCode(e);
             const isSel = selected.has(e.id);
             return (
-              <li key={e.id} className="bg-white border border-brand-line rounded-xl p-3">
-                <div className="flex items-start gap-3">
-                  {code ? (
-                    <button
-                      onClick={() => toggle(e.id)}
-                      className={`shrink-0 w-6 h-6 rounded border flex items-center justify-center text-xs ${
-                        isSel ? "bg-brand-accent-2 text-white border-brand-accent-2" : "border-brand-line"
-                      }`}
-                      aria-label="select for printing"
-                    >
-                      {isSel ? "✓" : ""}
-                    </button>
-                  ) : (
-                    <div className="shrink-0 w-6 h-6" />
-                  )}
-
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-mono font-bold text-brand-accent-2">
-                      {code ?? "— no code —"}
-                      <span className="ml-1 text-brand-mute font-sans font-normal">
-                        {e.master_code ? "· existing" : code ? "· NEW" : ""}
-                      </span>
-                    </div>
-                    <div className="text-sm text-brand-ink truncate">{e.name}</div>
-                    <div className="text-xs text-brand-mute truncate">{metaFor(e)}</div>
+              <li key={e.id}>
+                <Card className="p-3">
+                  <div className="flex items-start gap-3">
                     {code ? (
-                      <div className="mt-2">
-                        <Barcode value={code} />
-                      </div>
-                    ) : (
                       <button
-                        onClick={() => assignOne(e.id)}
-                        disabled={assign.isPending}
-                        className="mt-2 rounded-lg border border-brand-accent-2 text-brand-accent-2 px-3 py-1 text-xs font-semibold"
+                        onClick={() => toggle(e.id)}
+                        className={`shrink-0 w-6 h-6 rounded border flex items-center justify-center text-xs ${
+                          isSel ? "bg-brand-accent-2 text-white border-brand-accent-2" : "border-brand-line"
+                        }`}
+                        aria-label="select for printing"
                       >
-                        Assign ITM code
+                        {isSel ? "✓" : ""}
                       </button>
+                    ) : (
+                      <div className="shrink-0 w-6 h-6" />
                     )}
+
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-mono font-bold text-brand-accent-2">
+                        {code ?? "— no code —"}
+                        <span className="ml-1 text-brand-mute font-sans font-normal">
+                          {e.master_code ? "· existing" : code ? "· NEW" : ""}
+                        </span>
+                      </div>
+                      <div className="text-sm text-brand-ink truncate">{e.name}</div>
+                      <div className="text-xs text-brand-mute truncate">{metaFor(e)}</div>
+                      {code ? (
+                        <div className="mt-2">
+                          <Barcode value={code} />
+                        </div>
+                      ) : (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => assignOne(e.id)}
+                          disabled={assign.isPending}
+                          className="mt-2"
+                        >
+                          Assign ITM code
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </Card>
               </li>
             );
           })}
