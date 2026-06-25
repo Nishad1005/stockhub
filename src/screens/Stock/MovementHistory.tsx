@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { useMovements } from "@/hooks/useMovements";
 import { MovementDetailModal } from "./MovementDetailModal";
 import type { MovementRow } from "@/types/movement";
+import { Badge } from "@/components/ui/Badge";
+import { AlertTriangle } from "lucide-react";
 
 function isDiscrepancy(m: MovementRow): boolean {
   return m.type === "OUT" && m.available_qty != null && m.qty > m.available_qty;
@@ -31,13 +33,15 @@ export function MovementHistory() {
         {rows.map((m) => (
           <li key={m.id}>
             <button onClick={() => setDetail(m)} className="w-full text-left p-2 flex items-center gap-3">
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${m.type === "IN" ? "bg-brand-ok/15 text-brand-ok" : "bg-brand-bad/15 text-brand-bad"}`}>
+              <Badge tone={m.type === "IN" ? "ok" : "bad"} className="shrink-0">
                 {m.type}
-              </span>
+              </Badge>
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium text-brand-ink truncate">
                   {m.item_name}
-                  {isDiscrepancy(m) && <span className="ml-1 text-brand-bad">⚠</span>}
+                  {isDiscrepancy(m) && (
+                    <AlertTriangle className="w-3 h-3 inline ml-1 text-brand-bad" />
+                  )}
                 </div>
                 <div className="text-xs text-brand-mute truncate">
                   <span className="font-mono">{m.shelf_code}</span> · {m.ref_number} · {new Date(m.created_at).toLocaleDateString()}

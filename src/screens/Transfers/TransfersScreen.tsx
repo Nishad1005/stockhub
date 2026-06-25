@@ -5,6 +5,11 @@ import { transferStats } from "@/lib/transferStats";
 import { NewTransferModal } from "./NewTransferModal";
 import { TransferDetailModal } from "./TransferDetailModal";
 import type { TransferRow } from "@/types/transfer";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Plus } from "@/components/ui/icons";
 
 export function TransfersScreen() {
   const { data: transfers = [], isLoading, error } = useTransfers();
@@ -16,23 +21,29 @@ export function TransfersScreen() {
 
   return (
     <div className="min-h-screen bg-brand-cream text-brand-ink">
-      <header className="px-4 pt-5 pb-2">
-        <div className="text-xs font-bold uppercase tracking-widest text-brand-mute">U&amp;M StockHub</div>
-        <h1 className="text-xl font-bold">Transfers</h1>
-        <p className="text-sm text-brand-mute">Move stock between shelves with an STN audit trail</p>
-      </header>
+      <ScreenHeader
+        title="Transfers"
+        subtitle="Move stock between shelves with an STN audit trail"
+        action={
+          can("transfer") ? (
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={() => setShowNew(true)}
+            >
+              New Transfer
+            </Button>
+          ) : undefined
+        }
+      />
 
       <main className="px-4 pb-24 max-w-md mx-auto space-y-4">
-        <section className="bg-white border border-brand-line rounded-xl p-4">
+        <Card className="p-4">
           <div className="flex justify-between items-center mb-3">
             <span className="text-xs font-bold uppercase tracking-wide text-brand-mute">
               {stats.total} transfer{stats.total === 1 ? "" : "s"}
             </span>
-            {can("transfer") && (
-              <button onClick={() => setShowNew(true)} className="rounded-lg bg-brand-accent-2 text-white font-semibold px-3 py-1.5 text-sm">
-                ＋ New Transfer
-              </button>
-            )}
           </div>
           <div className="grid grid-cols-3 gap-2">
             {[
@@ -46,14 +57,14 @@ export function TransfersScreen() {
               </div>
             ))}
           </div>
-        </section>
+        </Card>
 
-        <section className="bg-white border border-brand-line rounded-xl p-2">
+        <Card className="p-2">
           {isLoading && <p className="text-sm text-brand-mute p-3 text-center">Loading…</p>}
           {error && <p className="text-sm text-brand-bad p-3 text-center">Failed to load transfers.</p>}
           {!isLoading && !error && transfers.length === 0 && (
             <p className="text-sm text-brand-mute p-6 text-center">
-              🔄 No transfers yet. Tap “＋ New Transfer” to record your first stock movement.
+              No transfers yet. Tap "New Transfer" to record your first stock movement.
             </p>
           )}
           <ul className="divide-y divide-brand-line">
@@ -66,9 +77,9 @@ export function TransfersScreen() {
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium text-brand-ink truncate">
                       {t.item_code && (
-                        <span className="mr-1 text-[10px] font-mono font-bold px-1 py-0.5 rounded bg-brand-ok/15 text-brand-ok">
+                        <Badge tone="ok" className="mr-1">
                           {t.item_code}
-                        </span>
+                        </Badge>
                       )}
                       {t.item_name}
                     </div>
@@ -84,7 +95,7 @@ export function TransfersScreen() {
               </li>
             ))}
           </ul>
-        </section>
+        </Card>
       </main>
 
       {showNew && <NewTransferModal onClose={() => setShowNew(false)} />}
