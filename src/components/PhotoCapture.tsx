@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { compressImage } from "@/lib/photo";
 import { toast } from "@/stores/toast";
 import { errMessage } from "@/lib/errors";
+import { Camera, Image } from "@/components/ui/icons";
 
 export interface PhotoCaptureProps {
   /** Compressed JPEG data-URL, or null. */
@@ -50,16 +51,16 @@ export function PhotoCapture({ value, onChange }: PhotoCaptureProps) {
           <button
             type="button"
             onClick={() => camRef.current?.click()}
-            className="flex-1 rounded-lg border border-brand-line py-2 text-sm text-brand-ink"
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-brand-line py-2 text-sm text-brand-ink"
           >
-            📷 Camera
+            <Camera className="w-4 h-4" /> Camera
           </button>
           <button
             type="button"
             onClick={() => galRef.current?.click()}
-            className="flex-1 rounded-lg border border-brand-line py-2 text-sm text-brand-ink"
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-brand-line py-2 text-sm text-brand-ink"
           >
-            🖼 Gallery
+            <Image className="w-4 h-4" /> Gallery
           </button>
         </div>
       )}

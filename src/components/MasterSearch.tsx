@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMasterSearch } from "@/hooks/useMasterSearch";
 import type { MasterItem } from "@/types/master";
+import { Home } from "@/components/ui/icons";
 
 export interface MasterSearchProps {
   value: string;
@@ -54,7 +55,9 @@ export function MasterSearch({ value, onChange, onPick, placeholder, inputId, au
                   {(it.definition ?? "—") + " · " + (it.category ?? "—")}
                 </div>
                 {it.section && (
-                  <div className="text-[10px] text-brand-accent-2 font-medium mt-0.5">🏠 {it.section}</div>
+                  <div className="flex items-center gap-0.5 text-[10px] text-brand-accent-2 font-medium mt-0.5">
+                    <Home className="w-3 h-3" /> {it.section}
+                  </div>
                 )}
               </button>
             </li>
