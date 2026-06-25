@@ -2,6 +2,8 @@ import { useState, type FormEvent } from "react";
 import { Navigate, useLocation, useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth";
 import { loginSchema } from "@/lib/validators/auth";
+import { Button } from "@/components/ui/Button";
+import { Input, Label } from "@/components/ui/Field";
 
 interface LocationState {
   from?: { pathname?: string };
@@ -54,34 +56,28 @@ export function LoginScreen() {
 
         <form
           onSubmit={onSubmit}
-          className="bg-white rounded-xl shadow-sm border border-brand-line p-6 space-y-4"
+          className="bg-white rounded-2xl shadow-card border border-brand-line p-6 space-y-4"
         >
           <div>
-            <label htmlFor="email" className="block text-xs font-semibold text-brand-mute mb-1">
-              Email
-            </label>
-            <input
+            <Label htmlFor="email">Email</Label>
+            <Input
               id="email"
               type="email"
               autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-brand-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent"
               autoFocus
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-xs font-semibold text-brand-mute mb-1">
-              Password
-            </label>
-            <input
+            <Label htmlFor="password">Password</Label>
+            <Input
               id="password"
               type="password"
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-brand-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent"
             />
           </div>
 
@@ -91,17 +87,16 @@ export function LoginScreen() {
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-lg bg-brand-accent-2 text-white font-semibold py-2.5 text-sm disabled:opacity-60"
-          >
+          <Button type="submit" disabled={busy} loading={busy} fullWidth>
             {busy ? "Signing in…" : "Sign in"}
-          </button>
+          </Button>
         </form>
 
         <p className="text-xs text-brand-mute text-center mt-4">
-          New here? <Link to="/signup" className="font-semibold text-brand-accent-2">Create account</Link>
+          New here?{" "}
+          <Link to="/signup" className="font-semibold text-brand-accent-2">
+            Create account
+          </Link>
         </p>
       </div>
     </div>

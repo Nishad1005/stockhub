@@ -3,6 +3,9 @@ import { verifyManagerPassword } from "@/lib/managerPassword";
 import { useSessionStore } from "@/stores/session";
 import { toast } from "@/stores/toast";
 import { errMessage } from "@/lib/errors";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Field";
 
 export interface ManagerUnlockProps {
   open: boolean;
@@ -12,6 +15,8 @@ export interface ManagerUnlockProps {
   /** Called after a correct password (defaults to enabling manual-entry mode). */
   onUnlocked?: () => void;
 }
+
+const FORM_ID = "manager-unlock-form";
 
 /**
  * Manager-password gate (v0.1 promptManagerPassword, but a proper modal — never
@@ -45,39 +50,26 @@ export function ManagerUnlock({ open, onClose, reason = "enable manual entry", o
     }
   }
 
+  const footer = (
+    <>
+      <Button type="button" variant="secondary" fullWidth onClick={onClose}>Cancel</Button>
+      <Button type="submit" form={FORM_ID} variant="primary" fullWidth loading={busy}>
+        {busy ? "Checking…" : "Unlock"}
+      </Button>
+    </>
+  );
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
-      <form
-        onSubmit={submit}
-        onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-xl p-5 w-full max-w-xs space-y-3"
-      >
-        <h2 className="font-bold text-brand-ink">Manager password</h2>
+    <Modal title="Manager password" onClose={onClose} footer={footer}>
+      <form id={FORM_ID} onSubmit={submit} className="space-y-3">
         <p className="text-xs text-brand-mute">Required to {reason}.</p>
-        <input
+        <Input
           type="password"
           autoFocus
           value={pw}
           onChange={(e) => setPw(e.target.value)}
-          className="w-full rounded-lg border border-brand-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent"
         />
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 rounded-lg border border-brand-line py-2 text-sm font-semibold"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={busy}
-            className="flex-1 rounded-lg bg-brand-accent-2 text-white py-2 text-sm font-semibold disabled:opacity-60"
-          >
-            {busy ? "Checking…" : "Unlock"}
-          </button>
-        </div>
       </form>
-    </div>
+    </Modal>
   );
 }

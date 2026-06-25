@@ -5,6 +5,7 @@ import { EDIT_LOCK_OPTIONS_HOURS } from "@/lib/editLock";
 import { toast } from "@/stores/toast";
 import { errMessage } from "@/lib/errors";
 import { Card } from "./Card";
+import { Button } from "@/components/ui/Button";
 
 const LOCK_LABEL: Record<number, string> = {
   1: "1 hour", 6: "6 hours", 12: "12 hours", 24: "24 hours (default)", 48: "48 hours", 168: "7 days",
@@ -27,9 +28,9 @@ export function AccessControlsCard() {
   }
 
   return (
-    <Card title="🔐 Access Controls">
+    <Card title="Access Controls">
       <div className="text-[11px] font-mono text-brand-mute mb-3">
-        Manual entry: {manualEntryMode ? "ON ⚠️" : "OFF ✓"} · Edit-lock: {editLockHours}h
+        Manual entry: {manualEntryMode ? "ON" : "OFF"} · Edit-lock: {editLockHours}h
       </div>
 
       <label className="block text-xs font-semibold text-brand-mute mb-1">Edit-Lock Window</label>
@@ -52,14 +53,13 @@ export function AccessControlsCard() {
           <div className="text-sm font-semibold text-brand-ink">Manual Entry Mode</div>
           <div className="text-[11px] text-brand-mute">Type zone/shelf instead of scanning. Session-only.</div>
         </div>
-        <button
+        <Button
+          variant={manualEntryMode ? "danger" : "secondary"}
+          size="sm"
           onClick={() => setManualEntryMode(!manualEntryMode)}
-          className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${
-            manualEntryMode ? "bg-brand-bad text-white" : "border border-brand-line text-brand-ink"
-          }`}
         >
           {manualEntryMode ? "ON" : "OFF"}
-        </button>
+        </Button>
       </div>
     </Card>
   );

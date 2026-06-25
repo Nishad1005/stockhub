@@ -3,6 +3,7 @@ import { useEntries } from "@/hooks/useEntries";
 import { rollUpStock } from "@/lib/stockLevels";
 import { ItemDetailModal } from "@/screens/ItemDetail/ItemDetailModal";
 import type { ItemSelector } from "@/lib/itemDetail";
+import { Badge } from "@/components/ui/Badge";
 
 export function StockLevels() {
   const { data: entries = [], isLoading } = useEntries();
@@ -25,7 +26,11 @@ export function StockLevels() {
               >
                 <div className="min-w-0">
                   <div className="text-sm font-medium text-brand-ink truncate">
-                    {it.code && <span className="mr-1 text-[10px] font-mono font-bold px-1 py-0.5 rounded bg-brand-ok/15 text-brand-ok">{it.code}</span>}
+                    {it.code && (
+                      <Badge tone="ok" className="mr-1">
+                        {it.code}
+                      </Badge>
+                    )}
                     {it.name}
                   </div>
                   <div className="text-[11px] text-brand-mute">

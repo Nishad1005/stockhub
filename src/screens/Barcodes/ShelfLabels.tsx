@@ -4,6 +4,9 @@ import { ZONE_INDEX } from "@/constants/zones";
 import { buildShelfLabelsPdf } from "@/lib/shelfLabelPdf";
 import { toast } from "@/stores/toast";
 import { errMessage } from "@/lib/errors";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Download } from "@/components/ui/icons";
 
 export function ShelfLabels() {
   const { data: shelves = [] } = useShelves();
@@ -33,7 +36,7 @@ export function ShelfLabels() {
   }
 
   return (
-    <section className="bg-white border border-brand-line rounded-xl p-4 mt-4">
+    <Card className="p-4 mt-4">
       <h2 className="text-xs font-bold uppercase tracking-wide text-brand-mute mb-1">Shelf labels</h2>
       <p className="text-[11px] text-brand-mute mb-2">Reprint a zone's shelf barcodes (matches the existing labels).</p>
       <div className="flex gap-2">
@@ -43,10 +46,17 @@ export function ShelfLabels() {
             <option key={z} value={z}>{z} · {ZONE_INDEX[z]?.name ?? z} ({c} shelves)</option>
           ))}
         </select>
-        <button onClick={download} disabled={busy || !zone} className="rounded-lg bg-brand-accent-2 text-white font-semibold px-3 text-sm disabled:opacity-50">
-          {busy ? "…" : "⬇ PDF"}
-        </button>
+        <Button
+          variant="primary"
+          size="sm"
+          icon={<Download className="w-4 h-4" />}
+          onClick={download}
+          disabled={busy || !zone}
+          loading={busy}
+        >
+          PDF
+        </Button>
       </div>
-    </section>
+    </Card>
   );
 }

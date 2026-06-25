@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Button } from "@/components/ui/Button";
 
 /**
  * Error boundary. React error boundaries MUST be class components — this is the
@@ -30,12 +31,12 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="min-h-screen flex flex-col items-center justify-center bg-brand-cream text-brand-ink p-6 text-center">
           <h1 className="text-xl font-bold mb-2">Something went wrong</h1>
           <p className="text-sm text-brand-bad max-w-md mb-4 break-words">{this.state.error.message}</p>
-          <button
+          <Button
+            variant="secondary"
             onClick={() => this.setState({ error: null })}
-            className="rounded-lg border border-brand-line px-4 py-2 text-sm font-semibold"
           >
             Try again
-          </button>
+          </Button>
         </div>
       );
     }

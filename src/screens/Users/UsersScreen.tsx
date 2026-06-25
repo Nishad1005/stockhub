@@ -5,6 +5,10 @@ import { toast } from "@/stores/toast";
 import { errMessage } from "@/lib/errors";
 import { RolePermissionsEditor } from "./RolePermissionsEditor";
 import type { UserRole } from "@/types/profile";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { ROLE_TONE } from "@/constants/roles";
 
 const ROLES: UserRole[] = ["pending", "storekeeper", "manager", "admin"];
 
@@ -37,18 +41,19 @@ export function UsersScreen() {
 
   return (
     <div className="min-h-screen bg-brand-cream text-brand-ink">
-      <header className="px-4 pt-5 pb-2">
-        <div className="text-xs font-bold uppercase tracking-widest text-brand-mute">U&amp;M StockHub</div>
-        <h1 className="text-xl font-bold">Users</h1>
-        <p className="text-sm text-brand-mute">{users.length} user{users.length === 1 ? "" : "s"}</p>
-      </header>
+      <ScreenHeader
+        title="Users"
+        subtitle={`${users.length} user${users.length === 1 ? "" : "s"}`}
+      />
 
       <main className="px-4 pb-24 max-w-md mx-auto space-y-4">
         {isLoading && <p className="text-sm text-brand-mute text-center mt-8">Loading…</p>}
 
         {pending.length > 0 && (
-          <section className="bg-white border-2 border-brand-warn/50 rounded-xl p-4">
-            <h2 className="text-xs font-bold uppercase tracking-wide text-brand-warn mb-2">Pending approvals ({pending.length})</h2>
+          <Card className="border-2 border-brand-warn/50 p-4">
+            <h2 className="text-xs font-bold uppercase tracking-wide text-brand-warn mb-2">
+              Pending approvals ({pending.length})
+            </h2>
             <ul className="space-y-2">
               {pending.map((u) => (
                 <li key={u.id} className="flex items-center gap-2">
@@ -56,7 +61,11 @@ export function UsersScreen() {
                     <div className="text-sm font-medium truncate">{u.full_name || u.email}</div>
                     <div className="text-[11px] text-brand-mute truncate">{u.email}</div>
                   </div>
-                  <select className={select} defaultValue="" onChange={(e) => e.target.value && setRole(u.id, e.target.value as UserRole)}>
+                  <select
+                    className={select}
+                    defaultValue=""
+                    onChange={(e) => e.target.value && setRole(u.id, e.target.value as UserRole)}
+                  >
                     <option value="" disabled>Approve as…</option>
                     <option value="storekeeper">Storekeeper</option>
                     <option value="manager">Manager</option>
@@ -65,10 +74,10 @@ export function UsersScreen() {
                 </li>
               ))}
             </ul>
-          </section>
+          </Card>
         )}
 
-        <section className="bg-white border border-brand-line rounded-xl p-4">
+        <Card className="p-4">
           <h2 className="text-xs font-bold uppercase tracking-wide text-brand-mute mb-2">All users</h2>
           <ul className="divide-y divide-brand-line">
             {others.map((u) => {
@@ -80,7 +89,10 @@ export function UsersScreen() {
                       {u.full_name || u.email}
                       {isSelf && <span className="ml-1 text-[10px] text-brand-mute">(you)</span>}
                     </div>
-                    <div className="text-[11px] text-brand-mute truncate">{u.email}</div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[11px] text-brand-mute truncate">{u.email}</span>
+                      <Badge tone={ROLE_TONE[u.role]}>{u.role}</Badge>
+                    </div>
                   </div>
                   <select
                     className={select}
@@ -96,7 +108,7 @@ export function UsersScreen() {
               );
             })}
           </ul>
-        </section>
+        </Card>
 
         <RolePermissionsEditor />
       </main>

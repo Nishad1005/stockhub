@@ -27,7 +27,12 @@ export default {
         ],
         mono: ["JetBrains Mono", "Menlo", "Monaco", "Consolas", "monospace"],
       },
-      borderRadius: { sm: "6px", DEFAULT: "8px", lg: "12px" },
+      borderRadius: { sm: "6px", DEFAULT: "8px", lg: "12px", xl: "14px", "2xl": "18px" },
+      boxShadow: {
+        card: "0 2px 10px rgba(44,30,15,0.07)",
+        sheet: "0 -6px 24px rgba(44,30,15,0.12)",
+        btn: "0 2px 8px rgba(139,107,64,0.25)",
+      },
     },
   },
   plugins: [],

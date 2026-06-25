@@ -6,6 +6,8 @@ import { buildEntriesCsv, buildTransfersCsv, downloadCsv } from "@/lib/csv";
 import { toast } from "@/stores/toast";
 import type { EntryRow } from "@/types/entry";
 import { Card } from "./Card";
+import { Button } from "@/components/ui/Button";
+import { Download } from "@/components/ui/icons";
 
 const stamp = () => new Date().toISOString().slice(0, 10);
 
@@ -37,13 +39,15 @@ export function ExportsCard() {
     toast(`Exported ${transfers.length} transfers`, "ok");
   }
 
-  const btn = "w-full rounded-lg border border-brand-line py-2 text-sm font-semibold text-brand-ink";
-
   return (
     <Card title="Exports">
       <div className="space-y-2">
-        <button onClick={exportEntries} className={btn}>⬇ Export entries CSV</button>
-        <button onClick={exportTransfers} className={btn}>⬇ Export transfers CSV</button>
+        <Button variant="secondary" size="md" fullWidth icon={<Download className="w-4 h-4" />} onClick={exportEntries}>
+          Export entries CSV
+        </Button>
+        <Button variant="secondary" size="md" fullWidth icon={<Download className="w-4 h-4" />} onClick={exportTransfers}>
+          Export transfers CSV
+        </Button>
       </div>
       <p className="text-[11px] text-brand-mute mt-2">
         Opens in Excel. Photos stay in cloud storage (not bundled).

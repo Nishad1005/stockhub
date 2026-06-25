@@ -1,0 +1,9 @@
+import type { BadgeTone } from "@/components/ui/Badge";
+import type { UserRole } from "@/types/profile";
+
+export const ROLE_TONE: Record<UserRole, BadgeTone> = {
+  pending: "warn",
+  storekeeper: "neutral",
+  manager: "ok",
+  admin: "bad",
+};

@@ -2,6 +2,9 @@ import { useState, type FormEvent } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth";
 import { signupSchema } from "@/lib/validators/auth";
+import { Button, buttonClasses } from "@/components/ui/Button";
+import { Input, Label } from "@/components/ui/Field";
+import { Check } from "@/components/ui/icons";
 
 export function SignUpScreen() {
   const status = useAuthStore((s) => s.status);
@@ -36,8 +39,6 @@ export function SignUpScreen() {
     }
   }
 
-  const field = "w-full rounded-lg border border-brand-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent";
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-brand-cream text-brand-ink p-6">
       <div className="w-full max-w-sm">
@@ -47,40 +48,43 @@ export function SignUpScreen() {
         </div>
 
         {done ? (
-          <div className="bg-white rounded-xl shadow-sm border border-brand-line p-6 text-center">
-            <div className="text-2xl mb-2">✅</div>
+          <div className="bg-white rounded-2xl shadow-card border border-brand-line p-6 text-center">
+            <div className="flex items-center justify-center mb-2">
+              <Check className="w-8 h-8 text-brand-ok" />
+            </div>
             <h2 className="font-bold mb-1">Account created</h2>
             <p className="text-sm text-brand-mute">An admin will approve your access. You can sign in once approved.</p>
-            <Link to="/login" className="inline-block mt-4 rounded-lg bg-brand-accent-2 text-white font-semibold px-4 py-2 text-sm">
+            <Link to="/login" className={`${buttonClasses("primary", "md")} mt-4 inline-flex`}>
               Back to sign in
             </Link>
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="bg-white rounded-xl shadow-sm border border-brand-line p-6 space-y-4">
+          <form onSubmit={onSubmit} className="bg-white rounded-2xl shadow-card border border-brand-line p-6 space-y-4">
             <div>
-              <label htmlFor="name" className="block text-xs font-semibold text-brand-mute mb-1">Full name</label>
-              <input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={field} autoFocus />
+              <Label htmlFor="name">Full name</Label>
+              <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} autoFocus />
             </div>
             <div>
-              <label htmlFor="email" className="block text-xs font-semibold text-brand-mute mb-1">Email</label>
-              <input id="email" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} className={field} />
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div>
-              <label htmlFor="password" className="block text-xs font-semibold text-brand-mute mb-1">Password</label>
-              <input id="password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={field} />
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
 
             {error && <p className="text-sm text-brand-bad" role="alert">{error}</p>}
 
-            <button type="submit" disabled={busy} className="w-full rounded-lg bg-brand-accent-2 text-white font-semibold py-2.5 text-sm disabled:opacity-60">
+            <Button type="submit" disabled={busy} loading={busy} fullWidth>
               {busy ? "Creating…" : "Create account"}
-            </button>
+            </Button>
           </form>
         )}
 
         {!done && (
           <p className="text-xs text-brand-mute text-center mt-4">
-            Already have an account? <Link to="/login" className="font-semibold text-brand-accent-2">Sign in</Link>
+            Already have an account?{" "}
+            <Link to="/login" className="font-semibold text-brand-accent-2">Sign in</Link>
           </p>
         )}
       </div>
