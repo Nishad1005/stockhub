@@ -9,6 +9,9 @@ import { NewTransferModal } from "@/screens/Transfers/NewTransferModal";
 import { MovementModal } from "@/screens/Stock/MovementModal";
 import { EditEntryModal } from "@/screens/Items/EditEntryModal";
 import type { EntryRow } from "@/types/entry";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 
 export interface ItemDetailModalProps {
   selector: ItemSelector;
@@ -42,66 +45,68 @@ export function ItemDetailModal({ selector, onClose }: ItemDetailModalProps) {
 
   const actBtn = "text-[11px] font-semibold rounded-lg border border-brand-line px-2 py-1";
 
+  const titleNode = (
+    <div className="min-w-0">
+      <div className="text-sm font-bold text-brand-ink truncate">
+        <Badge tone={code ? "ok" : "warn"} className="mr-1.5">{code ?? "NEW"}</Badge>
+        {name}
+      </div>
+      {(defn || category) && <div className="text-xs text-brand-mute font-normal">{[defn, category].filter(Boolean).join(" · ")}</div>}
+    </div>
+  );
+
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/60 flex items-end sm:items-center justify-center" onClick={onClose}>
-        <div className="bg-white w-full sm:max-w-md sm:rounded-xl rounded-t-2xl p-5 max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-start justify-between mb-1">
-            <div className="min-w-0">
-              <div className="text-sm font-bold text-brand-ink truncate">
-                <span className={`mr-1.5 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${code ? "bg-brand-ok/15 text-brand-ok" : "bg-brand-warn/15 text-brand-warn"}`}>
-                  {code ?? "NEW"}
-                </span>
-                {name}
-              </div>
-              {(defn || category) && <div className="text-xs text-brand-mute">{[defn, category].filter(Boolean).join(" · ")}</div>}
-            </div>
-            <button onClick={onClose} className="text-brand-mute text-lg leading-none px-1">✕</button>
-          </div>
-
-          <div className="flex items-center justify-between mt-2 mb-3">
-            <div className="text-xs text-brand-mute">Total on hand: <span className="font-mono font-bold text-brand-ink">{total}</span></div>
-            {can("stock_in") && <button onClick={() => setAction({ kind: "in" })} className="rounded-lg bg-brand-ok text-white font-semibold px-3 py-1.5 text-xs">📥 Stock IN</button>}
-          </div>
-
-          <div className="text-[10px] font-bold uppercase tracking-wide text-brand-mute mb-1">Locations</div>
-          {locations.length === 0 ? (
-            <p className="text-sm text-brand-mute mb-3">Not recorded at any shelf.</p>
-          ) : (
-            <ul className="divide-y divide-brand-line mb-4">
-              {locations.map((e) => (
-                <li key={e.id} className="py-2 flex items-center gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-mono font-bold text-brand-ink">{e.shelf_code}</div>
-                    <div className="text-[11px] text-brand-mute">{ZONE_INDEX[e.zone_code]?.name ?? e.zone_code} · qty {e.qty ?? "—"}</div>
-                  </div>
-                  {can("transfer") && <button onClick={() => setAction({ kind: "transfer", entry: e })} className={actBtn}>Move</button>}
-                  {can("stock_out") && <button onClick={() => setAction({ kind: "out", entry: e })} className={actBtn}>Out</button>}
-                  {can("edit_entry") && <button onClick={() => setAction({ kind: "edit", entry: e })} className={actBtn}>Edit</button>}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          <div className="text-[10px] font-bold uppercase tracking-wide text-brand-mute mb-1">Recent activity</div>
-          {activity.length === 0 ? (
-            <p className="text-sm text-brand-mute">No activity yet.</p>
-          ) : (
-            <ul className="space-y-1">
-              {activity.map((a) => (
-                <li key={a.kind + a.id} className="text-xs flex items-center gap-2">
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${a.kind === "IN" ? "bg-brand-ok/15 text-brand-ok" : a.kind === "OUT" ? "bg-brand-bad/15 text-brand-bad" : "bg-brand-accent-soft text-brand-accent-2"}`}>
-                    {a.kind === "TRANSFER" ? "MOVE" : a.kind}
-                  </span>
-                  <span className="font-mono text-brand-mute shrink-0">{a.ref.split("/").pop()}</span>
-                  <span className="text-brand-ink truncate">{a.summary}</span>
-                  <span className="text-brand-mute ml-auto shrink-0">{new Date(a.when).toLocaleDateString()}</span>
-                </li>
-              ))}
-            </ul>
+      <Modal title={titleNode} onClose={onClose}>
+        <div className="flex items-center justify-between mt-2 mb-3">
+          <div className="text-xs text-brand-mute">Total on hand: <span className="font-mono font-bold text-brand-ink">{total}</span></div>
+          {can("stock_in") && (
+            <Button size="sm" variant="primary" onClick={() => setAction({ kind: "in" })}>
+              Stock IN
+            </Button>
           )}
         </div>
-      </div>
+
+        <div className="text-[10px] font-bold uppercase tracking-wide text-brand-mute mb-1">Locations</div>
+        {locations.length === 0 ? (
+          <p className="text-sm text-brand-mute mb-3">Not recorded at any shelf.</p>
+        ) : (
+          <ul className="divide-y divide-brand-line mb-4">
+            {locations.map((e) => (
+              <li key={e.id} className="py-2 flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-mono font-bold text-brand-ink">{e.shelf_code}</div>
+                  <div className="text-[11px] text-brand-mute">{ZONE_INDEX[e.zone_code]?.name ?? e.zone_code} · qty {e.qty ?? "—"}</div>
+                </div>
+                {can("transfer") && <button onClick={() => setAction({ kind: "transfer", entry: e })} className={actBtn}>Move</button>}
+                {can("stock_out") && <button onClick={() => setAction({ kind: "out", entry: e })} className={actBtn}>Out</button>}
+                {can("edit_entry") && <button onClick={() => setAction({ kind: "edit", entry: e })} className={actBtn}>Edit</button>}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="text-[10px] font-bold uppercase tracking-wide text-brand-mute mb-1">Recent activity</div>
+        {activity.length === 0 ? (
+          <p className="text-sm text-brand-mute">No activity yet.</p>
+        ) : (
+          <ul className="space-y-1">
+            {activity.map((a) => (
+              <li key={a.kind + a.id} className="text-xs flex items-center gap-2">
+                <Badge
+                  tone={a.kind === "IN" ? "ok" : a.kind === "OUT" ? "bad" : "neutral"}
+                  className="shrink-0"
+                >
+                  {a.kind === "TRANSFER" ? "MOVE" : a.kind}
+                </Badge>
+                <span className="font-mono text-brand-mute shrink-0">{a.ref.split("/").pop()}</span>
+                <span className="text-brand-ink truncate">{a.summary}</span>
+                <span className="text-brand-mute ml-auto shrink-0">{new Date(a.when).toLocaleDateString()}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Modal>
 
       {action?.kind === "transfer" && (
         <NewTransferModal initialItem={itemFields} initialSourceShelf={action.entry.shelf_code} onClose={() => setAction(null)} />

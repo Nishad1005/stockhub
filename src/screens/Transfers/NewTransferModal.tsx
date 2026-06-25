@@ -11,6 +11,11 @@ import { ZONE_INDEX } from "@/constants/zones";
 import { toast } from "@/stores/toast";
 import { errMessage } from "@/lib/errors";
 import type { MasterItem } from "@/types/master";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { Input, Label } from "@/components/ui/Field";
+import { Badge } from "@/components/ui/Badge";
+import { Camera } from "@/components/ui/icons";
 
 export interface NewTransferModalProps {
   onClose: () => void;
@@ -87,61 +92,56 @@ export function NewTransferModal({ onClose, initialItem, initialSourceShelf }: N
     }
   }
 
-  const field =
-    "w-full rounded-lg border border-brand-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent read-only:bg-brand-cream";
-  const shelfField = `${field} font-mono font-bold uppercase tracking-wide`;
+  const footer = (
+    <>
+      <Button variant="secondary" fullWidth onClick={onClose}>Cancel</Button>
+      <Button variant="primary" fullWidth loading={create.isPending} onClick={save}>
+        {create.isPending ? "Saving…" : "Save transfer"}
+      </Button>
+    </>
+  );
 
   return (
-    <div className="fixed inset-0 z-40 bg-black/60 flex items-end sm:items-center justify-center" onClick={onClose}>
-      <div
-        className="bg-white w-full sm:max-w-md sm:rounded-xl rounded-t-2xl p-5 max-h-[90vh] overflow-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-brand-ink">New Transfer (STN)</h2>
-          <button onClick={onClose} className="text-brand-mute text-lg leading-none px-1">✕</button>
-        </div>
-
+    <>
+      <Modal title="New Transfer (STN)" onClose={onClose} footer={footer}>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-semibold text-brand-mute mb-1">
-              Item <span className="text-brand-bad">*</span>
-            </label>
+            <Label required>Item</Label>
             <MasterSearch value={itemName} onChange={onItemNameChange} onPick={pick} />
             {itemCode && (
-              <span className="inline-block mt-1.5 text-xs font-semibold rounded px-2 py-0.5 bg-brand-ok text-white">
-                ✓ {itemCode}
-              </span>
+              <Badge tone="ok" dot className="mt-1.5">
+                {itemCode}
+              </Badge>
             )}
           </div>
 
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-xs font-semibold text-brand-bad mb-1">From shelf *</label>
+              <Label tone="bad" required>From shelf</Label>
               <div className="flex gap-1">
-                <input
+                <Input
+                  mono
                   value={sourceShelf}
                   readOnly={!manualEntryMode}
                   onChange={(e) => setSourceShelf(e.target.value.toUpperCase())}
                   placeholder={manualEntryMode ? "Z1-S047" : "Scan →"}
-                  className={shelfField}
                 />
-                <button onClick={() => setScan("source")} className="rounded-lg bg-brand-accent-2 text-white px-3 text-sm">📷</button>
+                <Button variant="primary" size="sm" icon={<Camera className="w-4 h-4" />} onClick={() => setScan("source")} aria-label="Scan source shelf" />
               </div>
               {sourceZone && <div className="text-[11px] text-brand-mute mt-0.5">{sourceZone} · {ZONE_INDEX[sourceZone]?.name}</div>}
               {checkShelf(sourceShelf) === false && <div className="text-[11px] text-brand-warn mt-0.5">⚠ Not a registered shelf</div>}
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-semibold text-brand-ok mb-1">To shelf *</label>
+              <Label tone="ok" required>To shelf</Label>
               <div className="flex gap-1">
-                <input
+                <Input
+                  mono
                   value={destShelf}
                   readOnly={!manualEntryMode}
                   onChange={(e) => setDestShelf(e.target.value.toUpperCase())}
                   placeholder={manualEntryMode ? "Z2-S012" : "Scan →"}
-                  className={shelfField}
                 />
-                <button onClick={() => setScan("dest")} className="rounded-lg bg-brand-accent-2 text-white px-3 text-sm">📷</button>
+                <Button variant="primary" size="sm" icon={<Camera className="w-4 h-4" />} onClick={() => setScan("dest")} aria-label="Scan destination shelf" />
               </div>
               {destZone && <div className="text-[11px] text-brand-mute mt-0.5">{destZone} · {ZONE_INDEX[destZone]?.name}</div>}
               {checkShelf(destShelf) === false && <div className="text-[11px] text-brand-warn mt-0.5">⚠ Not a registered shelf</div>}
@@ -157,36 +157,27 @@ export function NewTransferModal({ onClose, initialItem, initialSourceShelf }: N
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-brand-mute mb-1">
-              Quantity <span className="text-brand-bad">*</span>
-            </label>
-            <input type="number" min={1} value={qty} onChange={(e) => setQty(e.target.value)} placeholder="—" className={field} />
+            <Label required>Quantity</Label>
+            <Input type="number" min={1} value={qty} onChange={(e) => setQty(e.target.value)} placeholder="—" />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-brand-mute mb-1">Reason</label>
-            <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Reallocation for production" className={field} />
+            <Label>Reason</Label>
+            <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Reallocation for production" />
           </div>
 
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-xs font-semibold text-brand-mute mb-1">Storekeeper</label>
-              <input value={storekeeper} onChange={(e) => setStorekeeper(e.target.value)} className={field} />
+              <Label>Storekeeper</Label>
+              <Input value={storekeeper} onChange={(e) => setStorekeeper(e.target.value)} />
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-semibold text-brand-mute mb-1">Helper</label>
-              <input value={helper} onChange={(e) => setHelper(e.target.value)} className={field} />
+              <Label>Helper</Label>
+              <Input value={helper} onChange={(e) => setHelper(e.target.value)} />
             </div>
           </div>
         </div>
-
-        <div className="flex gap-2 mt-4">
-          <button onClick={onClose} className="flex-1 rounded-lg border border-brand-line py-2 text-sm font-semibold">Cancel</button>
-          <button onClick={save} disabled={create.isPending} className="flex-1 rounded-lg bg-brand-accent-2 text-white py-2 text-sm font-semibold disabled:opacity-60">
-            {create.isPending ? "Saving…" : "Save transfer"}
-          </button>
-        </div>
-      </div>
+      </Modal>
 
       <CameraScanner
         open={scan !== null}
@@ -194,6 +185,6 @@ export function NewTransferModal({ onClose, initialItem, initialSourceShelf }: N
         onClose={() => setScan(null)}
         onDetected={onScanDetected}
       />
-    </div>
+    </>
   );
 }

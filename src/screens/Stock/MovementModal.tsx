@@ -11,6 +11,11 @@ import { ZONE_INDEX } from "@/constants/zones";
 import { toast } from "@/stores/toast";
 import { errMessage } from "@/lib/errors";
 import type { MasterItem } from "@/types/master";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { Input, Label } from "@/components/ui/Field";
+import { Badge } from "@/components/ui/Badge";
+import { Camera } from "@/components/ui/icons";
 
 export interface MovementModalProps {
   type: "IN" | "OUT";
@@ -83,37 +88,36 @@ export function MovementModal({ type, onClose, initialItem, initialShelf }: Move
     }
   }
 
-  const field =
-    "w-full rounded-lg border border-brand-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent read-only:bg-brand-cream";
+  const footer = (
+    <>
+      <Button variant="secondary" fullWidth onClick={onClose}>Cancel</Button>
+      <Button variant="primary" fullWidth loading={create.isPending} onClick={save}>
+        {create.isPending ? "Saving…" : isIn ? "Receive stock" : "Issue stock"}
+      </Button>
+    </>
+  );
 
   return (
-    <div className="fixed inset-0 z-40 bg-black/60 flex items-end sm:items-center justify-center" onClick={onClose}>
-      <div className="bg-white w-full sm:max-w-md sm:rounded-xl rounded-t-2xl p-5 max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-brand-ink">{isIn ? "📥 Stock IN (GRN)" : "📤 Stock OUT (MIR)"}</h2>
-          <button onClick={onClose} className="text-brand-mute text-lg leading-none px-1">✕</button>
-        </div>
-
+    <>
+      <Modal title={isIn ? "Stock IN (GRN)" : "Stock OUT (MIR)"} onClose={onClose} footer={footer}>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-semibold text-brand-mute mb-1">Item <span className="text-brand-bad">*</span></label>
+            <Label required>Item</Label>
             <MasterSearch value={itemName} onChange={onNameChange} onPick={pick} />
-            {itemCode && <span className="inline-block mt-1.5 text-xs font-semibold rounded px-2 py-0.5 bg-brand-ok text-white">✓ {itemCode}</span>}
+            {itemCode && <Badge tone="ok" dot className="mt-1.5">✓ {itemCode}</Badge>}
           </div>
 
           <div>
-            <label className={`block text-xs font-semibold mb-1 ${isIn ? "text-brand-ok" : "text-brand-bad"}`}>
-              {isIn ? "To shelf" : "From shelf"} <span className="text-brand-bad">*</span>
-            </label>
+            <Label tone={isIn ? "ok" : "bad"} required>{isIn ? "To shelf" : "From shelf"}</Label>
             <div className="flex gap-1">
-              <input
+              <Input
+                mono
                 value={shelfCode}
                 readOnly={!manualEntryMode}
                 onChange={(e) => setShelfCode(e.target.value.toUpperCase())}
                 placeholder={manualEntryMode ? "Z3-S042" : "Scan →"}
-                className={`${field} font-mono font-bold uppercase tracking-wide`}
               />
-              <button onClick={() => setScanOpen(true)} className="rounded-lg bg-brand-accent-2 text-white px-3 text-sm">📷</button>
+              <Button variant="primary" size="sm" icon={<Camera className="w-4 h-4" />} onClick={() => setScanOpen(true)} aria-label="Scan shelf" />
             </div>
             {zone && <div className="text-[11px] text-brand-mute mt-0.5">{zone} · {ZONE_INDEX[zone]?.name}</div>}
             {checkShelf(shelfCode) === false && <div className="text-[11px] text-brand-warn mt-0.5">⚠ Not a registered shelf</div>}
@@ -130,42 +134,33 @@ export function MovementModal({ type, onClose, initialItem, initialShelf }: Move
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-brand-mute mb-1">Quantity <span className="text-brand-bad">*</span></label>
-            <input type="number" min={1} value={qty} onChange={(e) => setQty(e.target.value)} placeholder="—" className={field} />
+            <Label required>Quantity</Label>
+            <Input type="number" min={1} value={qty} onChange={(e) => setQty(e.target.value)} placeholder="—" />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-brand-mute mb-1">
-              {isIn ? "Supplier / source" : "Department / destination"} <span className="text-brand-bad">*</span>
-            </label>
-            <input value={sourceOrDest} onChange={(e) => setSourceOrDest(e.target.value)} placeholder={isIn ? "e.g. Acme Supplies / Production" : "e.g. Stitching / Dispatch / Scrap"} className={field} />
+            <Label required>{isIn ? "Supplier / source" : "Department / destination"}</Label>
+            <Input value={sourceOrDest} onChange={(e) => setSourceOrDest(e.target.value)} placeholder={isIn ? "e.g. Acme Supplies / Production" : "e.g. Stitching / Dispatch / Scrap"} />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-brand-mute mb-1">Reason</label>
-            <input value={reason} onChange={(e) => setReason(e.target.value)} className={field} />
+            <Label>Reason</Label>
+            <Input value={reason} onChange={(e) => setReason(e.target.value)} />
           </div>
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-xs font-semibold text-brand-mute mb-1">Authorized by</label>
-              <input value={authorizedBy} onChange={(e) => setAuthorizedBy(e.target.value)} className={field} />
+              <Label>Authorized by</Label>
+              <Input value={authorizedBy} onChange={(e) => setAuthorizedBy(e.target.value)} />
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-semibold text-brand-mute mb-1">Notes</label>
-              <input value={notes} onChange={(e) => setNotes(e.target.value)} className={field} />
+              <Label>Notes</Label>
+              <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
           </div>
         </div>
-
-        <div className="flex gap-2 mt-4">
-          <button onClick={onClose} className="flex-1 rounded-lg border border-brand-line py-2 text-sm font-semibold">Cancel</button>
-          <button onClick={save} disabled={create.isPending} className="flex-1 rounded-lg bg-brand-accent-2 text-white py-2 text-sm font-semibold disabled:opacity-60">
-            {create.isPending ? "Saving…" : isIn ? "Receive stock" : "Issue stock"}
-          </button>
-        </div>
-      </div>
+      </Modal>
 
       <CameraScanner open={scanOpen} title={isIn ? "Scan destination shelf" : "Scan source shelf"} onClose={() => setScanOpen(false)} onDetected={onScan} />
-    </div>
+    </>
   );
 }
