@@ -5,6 +5,7 @@ import { useAssignItemCode, entryCode, entryNeedsCode } from "@/hooks/useAssignI
 import { Barcode } from "@/components/Barcode";
 import { downloadLabelsPdf, type LabelData } from "@/lib/labels";
 import { ShelfLabels } from "./ShelfLabels";
+import { ShelfCoverage } from "./ShelfCoverage";
 import { toast } from "@/stores/toast";
 import { errMessage } from "@/lib/errors";
 import type { EntryRow } from "@/types/entry";
@@ -156,6 +157,7 @@ export function BarcodesScreen() {
           })}
         </ul>
 
+        <ShelfCoverage />
         <ShelfLabels />
       </main>
     </div>
