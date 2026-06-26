@@ -8,7 +8,7 @@ export function ShelfCoverage() {
   const cov = useMemo(() => shelvesCoverage(data ?? []), [data]);
 
   return (
-    <section className="mt-6 bg-white border border-brand-line rounded-xl p-4">
+    <section className="bg-white border border-brand-line rounded-xl p-4">
       <h2 className="text-xs font-bold uppercase tracking-wide text-brand-mute mb-2">
         Registered shelves
       </h2>

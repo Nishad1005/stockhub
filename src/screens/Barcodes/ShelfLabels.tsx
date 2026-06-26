@@ -36,7 +36,7 @@ export function ShelfLabels() {
   }
 
   return (
-    <Card className="p-4 mt-4">
+    <Card className="p-4">
       <h2 className="text-xs font-bold uppercase tracking-wide text-brand-mute mb-1">Shelf labels</h2>
       <p className="text-[11px] text-brand-mute mb-2">Reprint a zone's shelf barcodes (matches the existing labels).</p>
       <div className="flex gap-2">
