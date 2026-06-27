@@ -2,7 +2,7 @@
 
 > A single reference for how the whole app is built: features, tech, the complete
 > database (schema, functions, triggers, RLS), the roles/permissions model, and how
-> to run/deploy. Current as of 2026-06-18.
+> to run/deploy. Current as of 2026-06-28.
 
 ---
 
@@ -20,14 +20,15 @@ production re-implementation of the v0.1 single-file HTML prototype.
 |------|-------|
 | Auth + roles (storekeeper / manager / admin / **pending**) | ✅ + self-signup + admin approval |
 | Capture (scan shelf → log items, sticky shelf, USB + camera + manual) | ✅ |
+| Photos (camera/gallery → compressed → Supabase Storage → thumbnail) | ✅ |
 | Items (browse/filter, edit, delete, edit-lock) | ✅ |
-| Transfers + STN | ✅ |
-| Stock IN/OUT (Credit/Debit) + running stock + discrepancies + alerts | ✅ |
+| Movements hub (`/movements`): Transfers + STN \| Stock IN/OUT + GRN/MIR + discrepancies | ✅ |
 | Find / Dashboard (locate item, zone stats, manager alerts) | ✅ |
-| Barcodes (assign ITM codes + PDF labels) | ✅ |
-| Settings (CSV exports, edit-lock policy, manual-entry, account/sign-out) | ✅ |
+| Barcodes — **Item barcodes** (zone filter + bulk assign + PDF) \| **Shelf labels** (zone reprint) | ✅ |
+| More / Settings (CSV exports, edit-lock policy, manual-entry, account/sign-out) | ✅ |
 | Item Detail + one-tap actions (Move/IN/OUT/Edit pre-filled) | ✅ |
 | Users management + **granular per-role permissions editor** | ✅ |
+| **6-tab navigation** (Capture · Items · Movements · Find · Barcodes · More) | ✅ |
 
 **Not built yet**: native iOS/Android wrap (parked), offline-first, production hardening,
 SOP doc. Pinned cosmetic: real zone names for Z1–Z6 (awaiting Zone 1's name).
@@ -46,8 +47,14 @@ SOP doc. Pinned cosmetic: real zone names for Z1–Z6 (awaiting Zone 1's name).
 | Validation | Zod |
 | Backend | Supabase (Postgres + Auth + Storage + RLS) |
 | Barcodes/labels | html5-qrcode (scan), JsBarcode, jsPDF |
-| Tests | Vitest (64 passing) |
+| Icons | lucide-react (via `src/components/ui/icons.ts`, ADR 0002) |
+| Tests | Vitest (85 passing) |
 | Hosting | Netlify (web) |
+
+**Design system**: shared `src/components/ui/` layer — `Button` (variants: primary, secondary,
+ghost, danger, ok, bad), `Badge`, `Chip`, `Card`, `Field` (Input/Label), `ScreenHeader`,
+`SearchField`, `Modal`, `icons.ts`. All icons route through `icons.ts` (lucide-react, ADR 0002).
+Chocolate `brand-*` tokens throughout; never raw hex in components.
 
 **State rule**: server data → React Query; global client state → Zustand; local UI → `useState`.
 Never mix.
@@ -62,27 +69,39 @@ src/
 ├── components/              AppShell, TabBar, ProtectedRoute, CameraScanner, MasterSearch, Toaster…
 ├── constants/               zones.ts, shelf.ts, permissions.ts
 ├── lib/                     supabase client, validators/, csv.ts, stockLevels.ts, itemDetail.ts,
-│                            permissions.ts, transferMatch.ts, shelf-validator.ts, editLock.ts, errors.ts
+│                            permissions.ts, transferMatch.ts, shelf-validator.ts, editLock.ts, errors.ts,
+│                            barcodeZones.ts, labels.ts, shelfLabelPdf.ts, shelfRegistry.ts, shelvesCoverage.ts,
+│                            photo.ts, masterSearch.ts, transferStats.ts, managerPassword.ts (dead)
 ├── stores/                  auth.ts, session.ts, captureSession.ts, toast.ts (Zustand)
 ├── hooks/                   one per data concern (useEntries, useTransfers, useMovements,
-│                            useAppSettings, useUsers, useRolePermissions, usePermissions, …)
+│                            useAppSettings, useUsers, useRolePermissions, usePermissions,
+│                            useShelves, useAssignItemCode, useEditLockPolicy, …)
 ├── types/                   database.ts (generated), entry.ts, transfer.ts, movement.ts, profile.ts, master.ts
-└── screens/                 one folder per route (Capture, Items, Transfers, Stock, Dashboard,
+└── screens/                 one folder per route (Capture, Items, Movements, Stock, Transfers, Dashboard,
                              Barcodes, Settings, Users, ItemDetail, Login, Pending)
-supabase/migrations/         0001 … 0013 (canonical SQL — source of truth)
+supabase/migrations/         0001 … 0014 (canonical SQL — source of truth)
 supabase/seed/               zones.sql, master_items.sql, master_enrichment.sql, build-master.mjs
 docs/                        STATUS.md, SYSTEM-REFERENCE.md (this), superpowers/specs + plans
 legacy/UM_Designs_StockHub.html   v0.1 prototype (read-only spec)
 ```
 
-**Navigation**: 7 bottom tabs — Capture · Items · Transfers · Stock · Find · Barcodes · Settings.
-Admin-only `/users`, plus `/signup` and `/login` (public) are routes without tabs.
+**Navigation**: 6 bottom tabs — `Capture · Items · Movements · Find · Barcodes · More`.
+- **Movements** (`/movements`) is a hub screen (`src/screens/Movements/MovementsScreen.tsx`) that
+  renders a `ScreenHeader` + a `Transfers | Stock` `Chip` toggle, embedding `TransfersScreen` or
+  `StockScreen` as fragments (they no longer render their own page header). Old routes `/transfers`
+  and `/stock` redirect to `/movements`.
+- **More** (`/more`) is the renamed Settings screen — `src/screens/Settings/SettingsScreen.tsx`
+  (titled "More"). Old route `/settings` redirects to `/more`.
+- **Barcodes** keeps its own top-level tab.
+- Admin-only `/users` is reached from More → Team → Manage users.
+- `/signup` and `/login` (public) and the pending-approval screen (no route, rendered by the route
+  guard) have no tab.
 
 ---
 
 ## 4. Database — enums, tables, sequences
 
-Postgres on Supabase. Below is the **consolidated current state** after migrations 0001–0013.
+Postgres on Supabase. Below is the **consolidated current state** after migrations 0001–0014.
 The migration files are the source of truth.
 
 ### Enums
@@ -111,7 +130,9 @@ purpose          text          -- (0002) subtitle shown in UI
 display_order    int  not null default 0
 ```
 
-**master_items** — the 4,561-item catalogue (re-seeded from factory CSV).
+**master_items** — the **4,877-item catalogue** (4,561 base items re-seeded from factory CSV + 316
+appended in the June 2026 refresh; codes `ITM-00001`–`ITM-04844` preserved by name-match, new codes
+from `ITM-04845` onward).
 ```sql
 code        text PK  check (code ~ '^ITM-[0-9]{5}$')
 name        text not null
@@ -193,6 +214,18 @@ permission  text not null                           -- one of the 10 PermissionK
 primary key (role, permission)
 ```
 
+**shelves** — the 612 physical shelf registry for Z01–Z06 (0014). Used for "known shelf" checks
+and the coverage card in Barcodes.
+```sql
+code         text PK  check (code ~ '^Z[0-9]+-[SGPR][0-9]+$')
+zone_code    text not null references zones(code)
+fixture_type fixture_type not null
+seq          int  not null
+unique (zone_code, fixture_type, seq)
+```
+> Note: `zones` (Z01–Z11) exists in the DB but is **never queried** by the app — zone data is
+> served client-side from `src/constants/zones.ts`. `shelves` (Z01–Z06) IS queried via `useShelves`.
+
 ---
 
 ## 5. Functions, triggers, views
@@ -251,8 +284,8 @@ unlock_entry · change_settings · view_alerts`.
 ### Auth flow
 Login (`/login`) or self-signup (`/signup`) → `handle_new_user` creates a **pending** profile →
 `ProtectedRoute` shows the **PendingApprovalScreen** until an admin assigns a real role on the
-**Users** screen (`/users`, admin-only, reached from Settings → Manage users). Supabase persists the
-session; sign out from **Settings → Account**.
+**Users** screen (`/users`, admin-only, reached from **More → Team → Manage users**). Supabase
+persists the session; sign out from **More → Account**.
 
 ---
 
@@ -294,7 +327,7 @@ All data tables have RLS enabled. `current_user_role()` reads the caller's role.
 
 ---
 
-## 9. Migrations (0001–0013)
+## 9. Migrations (0001–0014)
 
 | # | What it does |
 |---|--------------|
@@ -311,6 +344,7 @@ All data tables have RLS enabled. `current_user_role()` reads the caller's role.
 | 0011 | Add `pending` to `user_role` enum (own migration) |
 | 0012 | Default new signups to `pending`; `guard_role_change` trigger; pending write-lockout RLS |
 | 0013 | `role_permissions` table + RLS + default seed |
+| 0014 | `shelves` table — 612-shelf physical registry (Z01–Z06); used for "known shelf" checks and coverage cards |
 
 Seeds: `supabase/seed/zones.sql` (11 zones), `master_items.sql` (catalogue), `master_enrichment.sql`
 (category+section). Master rebuild script: `supabase/seed/build-master.mjs`.
@@ -339,7 +373,7 @@ npm install
 npm run dev                 # local dev (http://localhost:5173)
 npm run build               # production build (Netlify runs this)
 npx tsc --noEmit            # typecheck
-npx vitest run              # tests (64)
+npx vitest run              # tests (85)
 ```
 
 **Deploy flow** (owner does the DB + push; secrets never leave the owner):
@@ -360,6 +394,16 @@ stay with the owner.
 - **Pending users can still READ** all data via the API (writes are blocked). Reads weren't tightened.
 - **`running_stock` view** is now a plain sum of `entries.qty`; the Stock-levels UI computes its own
   rollup client-side (includes NEW items). Keep both in mind if stock numbers ever look off.
+- **`zones` table is never queried** — zone data is served client-side from `src/constants/zones.ts`.
+  The `shelves` table (0014) IS queried via `useShelves`.
 - **Zone names Z01–Z06 are still placeholders** (RAW-MATERIALS, etc.) pending the real names.
 - **No offline mode** — the app needs connectivity; camera scanning needs HTTPS (Netlify) or localhost.
-- **Photos** are in Supabase Storage (URLs on `entries.photo_url`); CSV export does not bundle them.
+- **Photos** are in Supabase Storage bucket `entry-photos` (URLs on `entries.photo_url`); bucket
+  was created manually in the live project on 2026-06-26 (no migration; a fresh environment must
+  recreate it). CSV export does not bundle photos. A Storage failure on upload aborts the whole entry
+  save (hardening candidate).
+- **Barcodes screen has two tabs**: *Item barcodes* (`src/screens/Barcodes/ItemBarcodes.tsx`) with
+  zone filter chips (counts via `lib/barcodeZones.ts` `zonesPresent()`), bulk assign, and PDF
+  download; *Shelf labels* (`ShelfCoverage` + `ShelfLabels`) for zone reprint. Selection persists
+  across zone-filter changes — the PDF download draws from all selected entries regardless of the
+  active zone filter.

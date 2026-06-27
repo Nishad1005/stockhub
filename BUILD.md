@@ -1,7 +1,7 @@
 # BUILD.md — StockHub v0.2 Build Plan
 
-> **Current phase**: 🟢 Phases 1–7 done + **live on Netlify** — Capture (incl. item-barcode scan), Items/edit/delete + section filter, **Transfers + STN**, **Find/Dashboard**, **Barcodes** (assign ITM codes + PDF labels), auth, tab nav (5 tabs). Supabase live (`ocqfpmealzautpsvxuij`); 4,561-item master **enriched** with 6-category + 13-section taxonomy (migration 0008 + `master_enrichment.sql`, applied); `npm run build` green (82 tests). Tested on phone via Netlify HTTPS — scanning + flows confirmed working. Remaining: Phase 8 (Settings/exports — incl. transfers CSV), Phase 9+ (native), plus cosmetic real zone names.
-> **UI polish complete** (`feat/ui-polish` branch): design-system layer built in `src/components/ui/` (Button, Input, Label, Badge, Chip, Card, Modal, ScreenHeader, icons via `icons.ts` / ADR 0002); full "Warm & Polished" sweep across all screens + modals — all emoji replaced with lucide icons, hand-rolled modals migrated to `<Modal>`, direct lucide imports consolidated to `icons.ts`. Gate: `tsc --noEmit` clean, `npm run build` green, 82 tests passed.
+> **Current phase**: 🟢 Phases 0–8 done + **live on Netlify** — Capture (incl. item-barcode scan + photo), Items/edit/delete + section filter, **Transfers + STN**, **Stock IN/OUT + GRN/MIR**, **Find/Dashboard + Alerts**, **Barcodes** (assign ITM codes + PDF labels + shelf reprint), **Settings/More** (exports, access controls, edit-lock), auth + roles + 10 granular permissions, **6-tab nav** (`Capture · Items · Movements · Find · Barcodes · More`; Movements is a hub with `Transfers | Stock` toggle; More is the renamed Settings; `/transfers`·`/stock` → `/movements` and `/settings` → `/more` redirect). Supabase live (`ocqfpmealzautpsvxuij`); **4,877-item master** (4,561 base + 316 June append) with 6-category + 13-section taxonomy (migration 0008 + `master_enrichment.sql`, applied); 612-shelf registry (migration 0014); `entry-photos` Storage bucket live (confirmed 2026-06-26); `npm run build` green (**85 tests**). Tested on phone via Netlify HTTPS — scanning, transfers, stock IN/OUT, barcodes, exports all confirmed working. Remaining: Phase 9+ (native scanner, offline-first, inventory).
+> **UI design system + nav redesign**: both merged to `main`. Design-system layer in `src/components/ui/` (Button incl. ok/bad variants, Badge, Chip, Card, Field, ScreenHeader, SearchField, Modal; lucide icons via `icons.ts` / ADR 0002); full "Warm & Polished" sweep across all screens + modals; Barcodes screen reorganised into two-tab layout (Item barcodes with zone filter chips | Shelf labels reprint). Gate: `tsc --noEmit` clean, `npm run build` green, 85 tests passed.
 > **Started**: TBD
 > **Target v0.2 launch**: TBD
 >
@@ -17,15 +17,15 @@ next phase until they're met.
 
 | # | Phase | Time est. | Status |
 |---|-------|-----------|--------|
-| 0 | Project scaffold + Supabase setup | 2-3 h | 🟡 In progress |
-| 1 | Data layer (schema, types, hooks) | 4-6 h | ⬜ Not started |
-| 2 | Auth + roles (storekeeper, manager, admin) | 3-4 h | ⬜ |
-| 3 | Port Capture screen | 6-8 h | ⬜ |
-| 4 | Port Items + Edit modal + Edit-lock | 4-5 h | ⬜ |
+| 0 | Project scaffold + Supabase setup | 2-3 h | 🟢 done |
+| 1 | Data layer (schema, types, hooks) | 4-6 h | 🟢 done |
+| 2 | Auth + roles (storekeeper, manager, admin) | 3-4 h | 🟢 done |
+| 3 | Port Capture screen | 6-8 h | 🟢 done |
+| 4 | Port Items + Edit modal + Edit-lock | 4-5 h | 🟢 done |
 | 5 | Port Dashboard (Find) | 3-4 h | 🟢 done |
 | 6 | Port Transfers + STN workflow | 5-7 h | 🟢 done |
-| 7 | Port Barcodes + label printing | 3-4 h | ⬜ |
-| 8 | Port Settings + Access Controls | 2-3 h | ⬜ |
+| 7 | Port Barcodes + label printing | 3-4 h | 🟢 done |
+| 8 | Port Settings + Access Controls | 2-3 h | 🟢 done |
 | 9 | Native barcode scanner (Capacitor MLKit) | 4-6 h | ⬜ |
 | 10 | Offline-first (SQLite mirror + sync queue) | 8-12 h | ⬜ |
 | 11 | Inventory module (Credit/Debit + running stock) | 6-8 h | ⬜ |
@@ -92,9 +92,9 @@ every read/write are defined and tested.
 - [x] Supporting: `src/lib/validators/entry.ts` (Zod, v0.1 rules), `src/lib/editLock.ts`
       (client-side lock helper), `src/lib/entryFilters.ts`, `src/stores/session.ts`
       (manualEntryMode / unlockedEntryIds). Unit-tested: 26 tests passing.
-- [x] Seed master data: 4,561 items from Stock_Analysis CSV via `supabase/seed/build-master.mjs`
+- [x] Seed master data: **4,877 items** (4,561 base + 316 June append) from Stock_Analysis CSV via `supabase/seed/build-master.mjs`
       → `supabase/seed/master_items.sql` (preserves v0.1 ITM codes, appends ITM-02028…ITM-04844,
-      ERP code in `sku` column). Re-run the script if the CSV is refreshed.
+      ERP code in `sku` column; new items beyond the base start at `ITM-04845`). Re-run the script if the CSV is refreshed.
 - [ ] **User action**: `npx supabase db push` to apply migration **0004** (entries delete policy)
 
 ### Acceptance
@@ -107,13 +107,14 @@ every read/write are defined and tested.
 
 ## Phase 2 — Auth + roles
 
-**Goal**: users can sign in. Three roles supported: `storekeeper`, `manager`,
-`admin`. Manager actions (unlock entry, enable manual entry) check the
-manager-password column on the user row.
+**Goal**: users can sign in. Four roles live: `pending`, `storekeeper`, `manager`,
+`admin`. Manager actions (enable manual entry, edit-lock changes) are gated by
+`change_settings` permission; unlock is a session-only toggle. 10 granular permissions
+per role are stored in `role_permissions` (migration 0013) and edited in the Users screen.
 
 **Decisions** (confirmed): entry visibility is **shared** — all signed-in users
-read all entries (owner/manager edit), keeping the full stock map for everyone;
-accounts are **admin-provisioned** (login-only, no public sign-up).
+read all entries (pending write-locked at DB level), keeping the full stock map for everyone;
+accounts are **self-sign-up + admin-approval** (new users land as `pending`; migration 0012 adds trigger + `pending` enum value; migration 0011 adds the enum value).
 
 ### Tasks
 - [ ] **User action**: enable Email provider in Supabase dashboard (Auth → Providers)
@@ -121,17 +122,19 @@ accounts are **admin-provisioned** (login-only, no public sign-up).
 - [x] `profiles` table with `role` enum + `manager_password_hash` (migration 0001) + auto-create trigger
 - [x] Auth store `src/stores/auth.ts` (session) + `useProfile()` (role) + combined `useAuth()`
 - [x] Login screen `src/screens/Login/LoginScreen.tsx` (email/password, Zod, brand-themed)
+- [x] **Self sign-up** (`/signup`, `SignUpScreen.tsx`) — new users land as `pending`; migration 0012 adds `guard_role_change` trigger + `handle_new_user` trigger; migration 0011 adds `pending` enum value
+- [x] **Pending approval screen** (rendered by `ProtectedRoute` when `role === "pending"`)
 - [x] `AuthProvider` (init + splash) and `ProtectedRoute` (auth + optional role gate); routes wired in `App.tsx`
-- [x] **Migration 0005** — `set_manager_password` / `verify_manager_password` RPCs (bcrypt, per-user)
-- [x] RLS: kept "entries readable by all authenticated" (shared decision); 0004 added the delete policy
-- [ ] Settings: change own / reset team passwords — **Phase 8** (RPCs from 0005 are ready)
-- [ ] `useManagerPassword()` typed hook — add after `db push` 0005 + `db:types` regen (used by the
-      Phase 4 unlock flow). RPC names aren't in the generated types until then.
+- [x] **Migration 0005** — `set_manager_password` / `verify_manager_password` RPCs (bcrypt, per-user) — RPCs exist but `ManagerUnlock` is dead code; real manager override is manual-entry-mode toggle
+- [x] **Migration 0013** — `role_permissions` table + 10 granular permissions; `usePermissions` / `useRolePermissions` / `RolePermissionsEditor`
+- [x] RLS: kept "entries readable by all authenticated" (shared decision); 0004 added the delete policy; pending users write-blocked by RLS
+- [ ] Manager password change UI — RPCs from migration 0005 exist; deferred (ManagerUnlock component is dead code)
 
 ### Acceptance
 - [x] Cannot reach `/capture` without auth (redirects to `/login`)
-- A storekeeper account can capture but cannot unlock locked entries (storekeeper has no manager password)
-- A manager can unlock with their password (verify_manager_password) — wired in Phase 4
+- [x] New self-signup lands as `pending` and sees the waiting screen
+- [x] Admin can approve + assign role via Users screen
+- [x] Permissions matrix is editable per role (storekeeper / manager; admin locked to full)
 - [x] Sign-out works, session persists across page reloads (Supabase persistSession)
 
 ---
@@ -166,10 +169,8 @@ accounts are **admin-provisioned** (login-only, no public sign-up).
 - [x] Manual entry mode (manager-unlocked) allows typing
 - [x] Works with USB scanner anywhere on the screen
 
-### User action to enable photos
-Create a Storage bucket `entry-photos` (Dashboard → Storage → New bucket). Then add
-insert access for authenticated users + read access. Capture works without it; only
-photo upload needs it.
+### Photos status
+The `entry-photos` Storage bucket was **created in the live project on 2026-06-26** (public, authenticated-insert + public-read). Photo-attached captures now save and thumbnails display. The bucket is **owner-provisioned** — a fresh Supabase environment must recreate it (no migration covers it). A Storage failure still aborts the entire entry save rather than degrading gracefully — a hardening candidate for Phase 14.
 
 ---
 
@@ -216,7 +217,7 @@ spec: `docs/migration/05-dashboard.md`.
 
 > **Stage B (master enrichment surfacing)** also shipped here: migration 0008 adds
 > `master_items.section`; `master_enrichment.sql` fills the 6-category + 13-section
-> taxonomy; Capture shows a 🏠 home-area hint on matches, Items shows it per row +
+> taxonomy (4,877-item catalogue total); Capture shows a home-area hint on matches, Items shows it per row +
 > an "All Areas" filter.
 
 ---
@@ -234,7 +235,9 @@ plan: `docs/superpowers/plans/2026-06-15-transfers-stn.md`.
 - [x] Transfer applies: insert STN row, decrement source entry, create dest entry (`useCreateTransfer`)
 - [x] `TransferDetailModal`
 - [x] Zone auto-derives from the scanned shelf (deviation from v0.1's zone dropdowns, per §5.2)
-- [ ] CSV export of transfers — moved to **Phase 8** (Settings/exports)
+- [x] CSV export of transfers — done in **Phase 8** (Settings/exports, gated by `export_data`)
+- [x] **Stock IN/OUT** (`StockScreen`) — GRN/MIR server sequences, `MovementModal`, discrepancy recording (`available_qty`), Stock levels tab + Movement history tab; all live under the Movements hub (`/movements` with `Transfers | Stock` toggle)
+- [x] Movements unified hub (`/movements`) — nav redesign merged to `main`; `/transfers`·`/stock` → `/movements` redirect
 
 > **Deferred:** the `running_stock` view double-counts a transfer (entries are mutated
 > *and* the view re-applies it). The view is unused until Phase 11, so reconcile it then —
@@ -253,16 +256,19 @@ plan: `docs/superpowers/plans/2026-06-15-transfers-stn.md`.
 **Reference**: HTML lines 700–800 (markup) + 1700–1850 (logic).
 
 ### Tasks
-- [x] `BarcodesScreen` — all items; NEW ones show "Assign ITM code"; coded ones show a CODE128 barcode
+- [x] `BarcodesScreen` — two-tab layout: **Item barcodes** (with zone filter chips) | **Shelf labels reprint**
 - [x] Assign code server-side via `next_item_code()` → persisted to `entries.assigned_code`
       (+ **migration 0007** restarts `item_code_seq` at 4845 so codes don't collide with the master)
 - [x] `Barcode` component (JsBarcode CODE128) + bulk "Assign codes to N NEW"
-- [x] Download PDF labels (`lib/labels.ts`, jsPDF lazy-loaded, 100×50mm layout)
+- [x] Download item label PDFs (`lib/labels.ts`, jsPDF lazy-loaded, 100×50mm layout)
+- [x] **Shelf labels reprint** — pick a zone → PDF of that zone's shelf barcodes matching the already-printed physical set (`lib/shelfLabelPdf.ts`, `useShelves`)
+- [x] `ShelfCoverage` card — registered-shelf counts per zone (depends on migration 0014 applied)
 - [ ] "Print Now" via browser print dialog — deferred (PDF download covers mobile)
 
 ### Acceptance
 - [x] Item codes increment correctly (server sequence, no master collisions)
 - [x] Coded items selectable → PDF of 100×50mm labels with barcode
+- [x] Shelf label reprint PDF matches the existing physical labels
 - [ ] Exact match to `UM_Shelf_Labels_152-207.pdf` layout — close, refine if needed
 
 ---
@@ -272,16 +278,21 @@ plan: `docs/superpowers/plans/2026-06-15-transfers-stn.md`.
 **Reference**: HTML lines 766–820, 1862–1900.
 
 ### Tasks
-- [ ] `SettingsScreen` — exports, storage info, access controls, about
-- [ ] Manager password change (requires old password)
-- [ ] Edit-lock window selector
-- [ ] Manual entry mode toggle (password-gated)
-- [ ] CSV export, ZIP export with photos
+- [x] `SettingsScreen` (routed at `/more`, renamed "More") — exports, data summary, access controls, about, account, team link
+- [x] Edit-lock window selector (`useUpdateEditLockHours`, gated by `change_settings`)
+- [x] Manual entry mode toggle (session-only, gated by `change_settings`)
+- [x] CSV export of entries and transfers (BOM-prefixed for Excel/Devanagari, gated by `export_data`)
+- [x] 10 granular permissions system (`role_permissions` table, migration 0013; `usePermissions` / `useRolePermissions` / `RolePermissionsEditor` on Users screen)
+- [x] Users screen: pending approvals, role management, per-role permission matrix (admin-only)
+- [x] `/settings` → `/more` redirect; nav tab renamed More
+- [ ] Manager password change (requires old password) — RPCs from migration 0005 exist but `ManagerUnlock` component is dead code; revisit if needed
+- [ ] ZIP export with photos — not built (CSV-only for now)
 
 ### Acceptance
-- All v0.1 Settings features work
-- Password change validates current password
-- Toggle persists for session, resets on reload
+- [x] Exports produce correct CSV
+- [x] Edit-lock window change takes effect immediately
+- [x] Toggle persists for session, resets on reload
+- [ ] Password change validates current password — deferred
 
 ---
 
