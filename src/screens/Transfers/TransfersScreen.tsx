@@ -5,7 +5,6 @@ import { transferStats } from "@/lib/transferStats";
 import { NewTransferModal } from "./NewTransferModal";
 import { TransferDetailModal } from "./TransferDetailModal";
 import type { TransferRow } from "@/types/transfer";
-import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -20,12 +19,10 @@ export function TransfersScreen() {
   const stats = useMemo(() => transferStats(transfers), [transfers]);
 
   return (
-    <div className="min-h-screen bg-brand-cream text-brand-ink">
-      <ScreenHeader
-        title="Transfers"
-        subtitle="Move stock between shelves with an STN audit trail"
-        action={
-          can("transfer") ? (
+    <>
+      <main className="px-4 pb-24 pt-3 max-w-md mx-auto space-y-4">
+        {can("transfer") && (
+          <div className="flex justify-end">
             <Button
               variant="primary"
               size="sm"
@@ -34,11 +31,8 @@ export function TransfersScreen() {
             >
               New Transfer
             </Button>
-          ) : undefined
-        }
-      />
-
-      <main className="px-4 pb-24 max-w-md mx-auto space-y-4">
+          </div>
+        )}
         <Card className="p-4">
           <div className="flex justify-between items-center mb-3">
             <span className="text-xs font-bold uppercase tracking-wide text-brand-mute">
@@ -100,6 +94,6 @@ export function TransfersScreen() {
 
       {showNew && <NewTransferModal onClose={() => setShowNew(false)} />}
       {detail && <TransferDetailModal transfer={detail} onClose={() => setDetail(null)} />}
-    </div>
+    </>
   );
 }

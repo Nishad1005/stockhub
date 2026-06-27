@@ -3,7 +3,6 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { MovementModal } from "./MovementModal";
 import { StockLevels } from "./StockLevels";
 import { MovementHistory } from "./MovementHistory";
-import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { Card } from "@/components/ui/Card";
@@ -15,13 +14,8 @@ export function StockScreen() {
   const { can } = usePermissions();
 
   return (
-    <div className="min-h-screen bg-brand-cream text-brand-ink">
-      <ScreenHeader
-        title="Stock"
-        subtitle="Receive, issue, and track inventory"
-      />
-
-      <main className="px-4 pb-24 max-w-md mx-auto space-y-4">
+    <>
+      <main className="px-4 pb-24 pt-3 max-w-md mx-auto space-y-4">
         {(can("stock_in") || can("stock_out")) && (
           <div className="flex gap-2">
             {can("stock_in") && (
@@ -64,6 +58,6 @@ export function StockScreen() {
       </main>
 
       {movement && <MovementModal type={movement} onClose={() => setMovement(null)} />}
-    </div>
+    </>
   );
 }

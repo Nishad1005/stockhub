@@ -4,11 +4,10 @@ import { TAB_ICONS } from "./ui/icons";
 const TABS = [
   { to: "/capture", label: "Capture" },
   { to: "/items", label: "Items" },
-  { to: "/transfers", label: "Transfers" },
-  { to: "/stock", label: "Stock" },
+  { to: "/movements", label: "Movements" },
   { to: "/dashboard", label: "Find" },
   { to: "/barcodes", label: "Barcodes" },
-  { to: "/settings", label: "Settings" },
+  { to: "/more", label: "More" },
 ];
 
 export function TabBar() {

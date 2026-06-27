@@ -11,9 +11,8 @@ import { CaptureScreen } from "@/screens/Capture/CaptureScreen";
 import { ItemsScreen } from "@/screens/Items/ItemsScreen";
 import { BarcodesScreen } from "@/screens/Barcodes/BarcodesScreen";
 import { DashboardScreen } from "@/screens/Dashboard/DashboardScreen";
-import { TransfersScreen } from "@/screens/Transfers/TransfersScreen";
+import { MovementsScreen } from "@/screens/Movements/MovementsScreen";
 import { SettingsScreen } from "@/screens/Settings/SettingsScreen";
-import { StockScreen } from "@/screens/Stock/StockScreen";
 import { SignUpScreen } from "@/screens/Login/SignUpScreen";
 import { UsersScreen } from "@/screens/Users/UsersScreen";
 import { useAuth } from "@/hooks/useAuth";
@@ -66,11 +65,13 @@ export function App() {
             <Route path="/" element={<Navigate to="/capture" replace />} />
             <Route path="/capture" element={protect(<CaptureScreen />)} />
             <Route path="/items" element={protect(<ItemsScreen />)} />
-            <Route path="/transfers" element={protect(<TransfersScreen />)} />
-            <Route path="/stock" element={protect(<StockScreen />)} />
+            <Route path="/movements" element={protect(<MovementsScreen />)} />
+            <Route path="/transfers" element={<Navigate to="/movements" replace />} />
+            <Route path="/stock" element={<Navigate to="/movements" replace />} />
             <Route path="/dashboard" element={protect(<DashboardScreen />)} />
             <Route path="/barcodes" element={protect(<BarcodesScreen />)} />
-            <Route path="/settings" element={protect(<SettingsScreen />)} />
+            <Route path="/more" element={protect(<SettingsScreen />)} />
+            <Route path="/settings" element={<Navigate to="/more" replace />} />
             <Route path="/users" element={protect(<UsersScreen />)} />
             <Route path="*" element={protect(<Placeholder name="404" />)} />
           </Routes>
