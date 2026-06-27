@@ -15,7 +15,7 @@ export function SettingsScreen() {
   const { can } = usePermissions();
   return (
     <div className="min-h-screen bg-brand-cream text-brand-ink">
-      <ScreenHeader title="Settings" />
+      <ScreenHeader title="More" />
       <main className="px-4 pb-24 max-w-md mx-auto space-y-4">
         {can("export_data") && <ExportsCard />}
         {can("change_settings") && <AccessControlsCard />}
