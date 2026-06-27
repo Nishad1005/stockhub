@@ -9,6 +9,10 @@ working product as a user and a developer experience it today.
 Where a capability has a real-world dependency the code can't self-verify (a Supabase
 bucket, an applied migration), it is called out inline so this stays trustworthy.
 
+> **Update 2026-06-28:** the navigation redesign has since merged to `main` and is live.
+> This doc now reflects the current **6-tab** nav (Movements hub + More); the original
+> audit baseline was `bc83f6f`.
+
 ---
 
 ## 1. What it is
@@ -33,16 +37,17 @@ catalogue, with role-based access and audit trails.
 - A **"waiting for approval" screen** shows for pending users until an admin approves them (rendered automatically by the route guard whenever the signed-in user's role is `pending`).
 - Session is restored on reload; a splash shows while auth/profile load.
 
-### Navigation (working — 7-tab bottom bar)
-The deployed app uses a **7-tab** bottom navigation:
+### Navigation (working — 6-tab bottom bar)
+The deployed app uses a **6-tab** bottom navigation:
 
-`Capture · Items · Transfers · Stock · Find · Barcodes · Settings`
+`Capture · Items · Movements · Find · Barcodes · More`
 
-(Plus an admin-only **Users** screen reached from Settings → Team.) Each tab maps to a
+(Plus an admin-only **Users** screen reached from More → Team.) Each tab maps to a
 real route and screen; the active tab shows a tan pill with a lucide icon.
 
-> Note: a separate 5-tab redesign (Movements hub + More) exists on an **unmerged** branch
-> and is **not** what's live. This doc describes the deployed 7-tab app.
+> **Movements** is a hub holding **Transfers** and **Stock** under one `Transfers | Stock`
+> toggle; **More** is the renamed Settings screen. Old links still resolve — `/transfers`
+> and `/stock` redirect to `/movements`, and `/settings` redirects to `/more`.
 
 ---
 
@@ -98,12 +103,12 @@ Opened from Items, from Find, and from Stock levels. Shows:
 - The item's code, name, **total quantity on hand** across shelves, **every shelf it sits on** (with per-shelf qty), and **recent activity** (stock IN/OUT + transfers).
 - **One-tap, pre-filled actions** (permission-gated, no re-typing): **Stock IN**, and per shelf row **Move** / **Out** / **Edit**.
 
-### Transfers (`/transfers`) — shelf → shelf with an STN
+### Transfers (Movements → Transfers) — shelf → shelf with an STN
 - Record a move: pick the item, scan the **From** shelf, scan the **To** shelf, enter quantity (a banner shows on-hand at the source), save.
 - Generates a server-sequenced **STN number** (`STN/YYYY-MM/NNNN`), logs the transfer, and updates the live entry quantities.
 - The Transfers screen shows today/this-week/total stats and a tappable list; each transfer opens a detail view.
 
-### Stock IN / OUT (`/stock`) — receive & issue
+### Stock IN / OUT (Movements → Stock) — receive & issue
 - **Stock IN** → server **GRN number**, quantity goes up. **Stock OUT** → server **MIR number**, quantity goes down (floored at 0).
 - **Over-issuing** more than the system shows is confirmed and recorded as a **discrepancy** (the available quantity at the time is stored on the movement).
 - Two tabs: **Stock levels** (per item, by shelf, computed live) and **History** (every IN/OUT, filterable to discrepancies).
@@ -119,7 +124,7 @@ Opened from Items, from Find, and from Stock levels. Shows:
 - **Reprint shelf labels** — pick a zone → a PDF of that zone's shelf barcodes that matches the already-printed physical labels (a drop-in reprint).
 - **Registered-shelves coverage** card showing how many shelves are loaded per zone. *(Depends on migration `0014_shelves` being applied in the live DB.)*
 
-### Settings (`/settings`) — exports, controls, account
+### More (`/more`, formerly Settings) — exports, controls, account
 - **Exports** (gated by `export_data`): entries and transfers as **CSV**, Excel-friendly with a BOM so Hindi/Devanagari renders correctly.
 - **Access Controls** (gated by `change_settings`): the **edit-lock window** selector and the **manual-entry-mode** toggle.
 - **Data / Master Data:** counts and catalogue summary (including how many entries have photos).
@@ -207,7 +212,6 @@ used consistently across all screens.
 
 These are referenced somewhere but are **not** live capabilities today:
 
-- **5-tab "Movements hub + More" navigation** — built on the unmerged `feat/nav-redesign` branch; the deployed app is the 7-tab layout above.
 - **ManagerUnlock component + `manager_password` (migration 0005)** — dead code, imported by nothing; the real manager override is the manual-entry-mode toggle.
 - **Native iOS / Android apps (Capacitor)** — scaffolded but parked; the app is browser-only.
 - **Offline-first (SQLite mirror + sync)** — not built; the app needs connectivity.

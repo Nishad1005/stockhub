@@ -26,23 +26,31 @@ Status legend:
 | 11 | Item Detail modal + one-tap actions | ✅ |
 | 12 | Transfers + STN | ✅ |
 | 13 | Stock IN/OUT + GRN/MIR + discrepancies | ✅ |
-| 14 | Movements unified hub (`/movements` with toggle) | 🟡 |
+| 14 | Movements unified hub (`/movements` with toggle) | ✅ |
 | 15 | Find / Dashboard (locate + aggregates) | ✅ |
 | 16 | Alerts panel (empty locations + discrepancies) | ✅ |
 | 17 | Barcodes: ITM codes + item labels + shelf reprint | ✅ |
 | 18 | 612-shelf registry + "unregistered shelf" warning | ✅ |
 | 19 | Settings content (exports, access controls, data, account, team) | ✅ |
-| 20 | 5-tab "More" navigation (`/more`, `/movements` routes, Tools card) | 🟡 |
+| 20 | 6-tab nav: `/movements` hub + `/more` (renamed Settings) + redirects | ✅ |
 | 21 | Users admin (pending approvals, role mgmt, permission matrix) | ✅ |
 | 22 | ManagerUnlock component / manager_password (migration 0005) | 🟡 |
 | 23 | Native iOS / Android (Capacitor) | ❌ |
 | 24 | Offline-first (SQLite mirror) | ❌ |
 
-Counts: ✅ 19 · 🟡 3 · ⚠️ 0 · ❌ 2
+Counts: ✅ 21 · 🟡 1 · ⚠️ 0 · ❌ 2
 
 > Update 2026-06-26: item 8 (photo capture) moved ⚠️ → ✅ after the owner created the
 > `entry-photos` Storage bucket in the live project and confirmed a photo-attached
 > capture now saves. The bucket is still created by no migration (see §3/§8).
+>
+> Update 2026-06-28: items 14 & 20 moved 🟡 → ✅ — the navigation redesign merged to
+> `main`. The bar is now **6 tabs** (`Capture · Items · Movements · Find · Barcodes ·
+> More`): Transfers + Stock live under a `/movements` hub with a `Transfers | Stock`
+> toggle, Settings is renamed **More** at `/more`, and `/transfers`·`/stock` → `/movements`
+> and `/settings` → `/more` redirect. Barcodes kept its own tab, so the earlier "Tools
+> card linking Barcodes" idea was dropped. This snapshot's `bc83f6f` line citations
+> predate that merge; the nav-specific sections below are updated.
 
 ---
 
@@ -66,11 +74,12 @@ Counts: ✅ 19 · 🟡 3 · ⚠️ 0 · ❌ 2
 
 ## 2. Screen-by-screen audit
 
-The doc describes a 5-tab world (Capture / Items / Movements / Find / More). The
-**deployed `main` route tree** (`src/App.tsx:63-76`) is the older 7-route shape:
-`/login`, `/signup`, `/capture`, `/items`, `/transfers`, `/stock`, `/dashboard`,
-`/barcodes`, `/settings`, `/users`. There is **no `/movements`, `/more`, or `/pending`
-route on main**. `src/components/TabBar.tsx` renders **7 tabs**.
+The **deployed `main` route tree** (`src/App.tsx`) now renders the merged nav: `/login`,
+`/signup`, `/capture`, `/items`, `/movements`, `/dashboard`, `/barcodes`, `/more`,
+`/users`, plus redirect routes `/transfers`·`/stock` → `/movements` and `/settings` →
+`/more`. `src/components/TabBar.tsx` renders **6 tabs**
+(`Capture · Items · Movements · Find · Barcodes · More`). There is still no `/pending`
+route — the pending screen is rendered by the route guard.
 
 ### Capture (`/capture`) — ✅ Live
 - File: `src/screens/Capture/CaptureScreen.tsx`, routed at `App.tsx:67`.
@@ -88,12 +97,11 @@ route on main**. `src/components/TabBar.tsx` renders **7 tabs**.
 - Reachable: code, name, total on-hand, per-shelf locations, recent activity (`itemLocations`/`itemActivity` from `lib/itemDetail.ts`). One-tap actions, permission-gated: Stock IN (`:63-67`), per-shelf Move / Out / Edit (`:81-83`) opening `NewTransferModal` / `MovementModal` / `EditEntryModal`.
 - Note (not a doc claim, just fact): the photo is **not** shown here — `photo_url` is read only in `ItemsScreen.tsx:107` and `EditEntryModal.tsx:118`.
 
-### Movements (Transfers + Stock) — ⚠️ Partial
-- The doc claims a single `/movements` hub with a `[Transfers | Stock]` toggle. **That hub does not exist on `main`.** It lives only on `feat/nav-redesign`.
-- What is actually deployed: two separate screens/tabs.
-  - Transfers — ✅ Live: `src/screens/Transfers/TransfersScreen.tsx`, routed `App.tsx:69`. List + stats (`transferStats`), New Transfer → `NewTransferModal` (STN via `next_stn_number` RPC, `useCreateTransfer.ts:40`), detail modal.
-  - Stock IN/OUT — ✅ Live: `src/screens/Stock/StockScreen.tsx`, routed `App.tsx:70`. IN/OUT buttons → `MovementModal`; "Stock levels" and "History" tabs (`StockLevels`, `MovementHistory`). GRN/MIR via `next_grn_number`/`next_mir_number` (`useCreateMovement.ts:39`). Discrepancy via `available_qty`.
-- So: the **features** are live as two screens; the **unified hub the doc describes is not on main**.
+### Movements (Transfers + Stock) — ✅ Live
+- The `/movements` hub now exists on `main`: `src/screens/Movements/MovementsScreen.tsx` renders a `ScreenHeader` + a `[Transfers | Stock]` `Chip` toggle, then the active sub-screen. Routed at `/movements`; `/transfers` and `/stock` redirect to it.
+  - Transfers — ✅ Live: `src/screens/Transfers/TransfersScreen.tsx` (now a fragment embedded in the hub; its "New Transfer" button sits at the top of the body). List + stats (`transferStats`), New Transfer → `NewTransferModal` (STN via `next_stn_number` RPC), detail modal.
+  - Stock IN/OUT — ✅ Live: `src/screens/Stock/StockScreen.tsx` (also embedded in the hub). IN/OUT buttons → `MovementModal`; "Stock levels" and "History" tabs (`StockLevels`, `MovementHistory`). GRN/MIR via `next_grn_number`/`next_mir_number`. Discrepancy via `available_qty`.
+- The unified hub the doc described is now the live navigation.
 
 ### Find / Dashboard (`/dashboard`) — ✅ Live
 - File: `src/screens/Dashboard/DashboardScreen.tsx`, routed `App.tsx:71`. (Tab label is "Find" in `TabBar.tsx`; the screen header reads "Dashboard", `DashboardScreen.tsx:105`.)
@@ -101,14 +109,14 @@ route on main**. `src/components/TabBar.tsx` renders **7 tabs**.
 - Alerts panel — ✅ Live, gated by `can("view_alerts")` (`:110`): empty locations + recent discrepancies (`emptyLocations`, `discrepancies` from `lib/stockLevels.ts`).
 
 ### Barcodes (`/barcodes`) — ✅ Live
-- File: `src/screens/Barcodes/BarcodesScreen.tsx`, routed `App.tsx:72`. Reached as its **own tab** on main, not via "More → Tools" (that path is nav-redesign only).
+- File: `src/screens/Barcodes/BarcodesScreen.tsx`, routed at `/barcodes`. Reached as its **own tab** — kept as a top-level tab in the merged nav redesign, so the earlier "More → Tools" idea was dropped.
 - Reachable: assign `ITM-#####` codes (`useAssignItemCode` → `next_item_code` RPC); single + bulk; item label PDF (`lib/labels.ts`); `ShelfCoverage` card; `ShelfLabels` shelf-label reprint PDF (`lib/shelfLabelPdf.ts`, `useShelves`).
 - Dependency: shelf "known/coverage" checks need migration `0014_shelves.sql` applied to the live DB (owner step; not verifiable from source).
 
-### More (`/more`) — 🟡 Stub (route + naming); content ✅ as `/settings`
-- The doc's "More" screen is the **Settings** screen on main: `src/screens/Settings/SettingsScreen.tsx`, routed `App.tsx:73` at `/settings`, titled "Settings" (`:18`). There is **no `/more` route**.
-- Content present and live: Exports (`export_data`), Access Controls (`change_settings`), Data, Master Data, About, Account/Sign-out, and an admin "Team → Manage users" link (`:24-30`).
-- Not wired vs doc: the doc's "Tools card linking to Barcodes" does **not** exist here (`SettingsScreen` links only to `/users`). The `/more` route, the rename, and the Tools card are all nav-redesign-only.
+### More (`/more`) — ✅ Live
+- The **More** screen is `src/screens/Settings/SettingsScreen.tsx`, routed at `/more` and titled "More" (`/settings` redirects to `/more`).
+- Content present and live: Exports (`export_data`), Access Controls (`change_settings`), Data, Master Data, About, Account/Sign-out, and an admin "Team → Manage users" link.
+- The Barcodes link is **not** here: Barcodes kept its own tab, so the "Tools card linking Barcodes" idea from the original redesign was dropped.
 
 ### Users (`/users`) — ✅ Live
 - File: `src/screens/Users/UsersScreen.tsx`, routed `App.tsx:74`. Admin-gated (`:29`).
@@ -229,7 +237,7 @@ One line per file in `src/components/` (and `src/components/ui/`); importer = no
 - `ErrorBoundary.tsx` — App.tsx.
 - `ProtectedRoute.tsx` — App.tsx (renders PendingApprovalScreen when pending).
 - `Splash.tsx` — AuthProvider, ProtectedRoute.
-- `TabBar.tsx` — AppShell (7 tabs).
+- `TabBar.tsx` — AppShell (6 tabs).
 - `CameraScanner.tsx` — CaptureScreen, ItemForm, NewTransferModal, MovementModal, DashboardScreen.
 - `MasterSearch.tsx` — ItemForm, NewTransferModal, MovementModal.
 - `PhotoCapture.tsx` — ItemForm.
@@ -318,7 +326,7 @@ One line per non-test file in `src/lib/` (and `src/lib/validators/`).
 - **`entry-photos` Storage bucket — RESOLVED 2026-06-26.** It did not exist initially (photo-attached saves failed with "Bucket not found"); the owner created it (public, authenticated-insert + public-read) and a photo capture now saves. Still created by no migration, so a fresh environment must recreate it.
 - **Migrations 0001–0014 are actually applied to the live DB.** The repo holds the SQL; it cannot prove the owner ran `supabase db push`. Features depending on later migrations — `role_permissions` (0013), `shelves`/612-registry (0014), `app_settings` (0009), `available_qty` discrepancies (0010) — work only if those migrations are live. To confirm: query the live DB or exercise each feature on the deployed site.
 - **The 4,561-item master + the +316 June append are loaded.** The seed SQL exists; load is an owner step. To confirm: `select count(*) from master_items` on the live DB.
-- **`PROJECT-OVERVIEW.md`'s "current" navigation (5 tabs / Movements / More).** This describes `feat/nav-redesign`, which is unmerged. The deployed app is 7 tabs. The doc is ahead of `main`; treat its §3/§9 as aspirational until that branch merges.
+- **`PROJECT-OVERVIEW.md`'s "current" navigation (Movements / More).** The Movements hub and More rename are now merged and live on `main`. The deployed bar is **6 tabs** (Barcodes kept its own tab), so it differs from that doc's 5-tab / Barcodes-in-Tools description; otherwise the nav is no longer aspirational.
 - **`docs/Stockhub.docx`.** Not present in the repo working tree; not audited. To confirm any claim unique to it, the file would need to be provided.
 - **iOS/Android (Capacitor) and offline-first (SQLite).** Doc marks these parked/not built; consistent with source (no active wiring). Listed ❌ as shipped features.
 
