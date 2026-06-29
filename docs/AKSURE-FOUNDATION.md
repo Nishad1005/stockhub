@@ -68,6 +68,10 @@ Index: `attachments_entity_idx (entity_type, entity_id)`.
   (no migration creates Storage buckets — same owner-provisioned pattern as `entry-photos`,
   per SYSTEM-REFERENCE §12).
 
+The bucket's RLS policies are captured in migration `0018`. On a fresh environment:
+(1) create the bucket in Supabase Storage with the name `aksure-attachments` (private,
+5 MB limit), (2) apply migrations through `0018` to install the policies.
+
 ### How to use it
 
 ```ts

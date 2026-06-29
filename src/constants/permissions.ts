@@ -39,4 +39,4 @@ export const PERMISSIONS: PermissionDef[] = [
 ];
 
 /** Roles whose permissions are editable (admin is locked to full access; pending has none). */
-export const EDITABLE_ROLES = ["storekeeper", "manager"] as const;
+export const EDITABLE_ROLES = ["security", "storekeeper", "manager"] as const;

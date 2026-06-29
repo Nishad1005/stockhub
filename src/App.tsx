@@ -15,6 +15,7 @@ import { MovementsScreen } from "@/screens/Movements/MovementsScreen";
 import { SettingsScreen } from "@/screens/Settings/SettingsScreen";
 import { SignUpScreen } from "@/screens/Login/SignUpScreen";
 import { UsersScreen } from "@/screens/Users/UsersScreen";
+import { GateScreen } from "@/screens/Gate/GateScreen";
 import { useAuth } from "@/hooks/useAuth";
 
 const queryClient = new QueryClient({
@@ -73,6 +74,8 @@ export function App() {
             <Route path="/more" element={protect(<SettingsScreen />)} />
             <Route path="/settings" element={<Navigate to="/more" replace />} />
             <Route path="/users" element={protect(<UsersScreen />)} />
+            {/* /gate is full-screen (no AppShell/tab bar); ProtectedRoute locks it to security */}
+            <Route path="/gate" element={<ProtectedRoute><GateScreen /></ProtectedRoute>} />
             <Route path="*" element={protect(<Placeholder name="404" />)} />
           </Routes>
           </ErrorBoundary>

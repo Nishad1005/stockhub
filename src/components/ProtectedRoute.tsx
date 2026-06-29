@@ -26,6 +26,14 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   if (profileLoading) return <Splash message="Loading…" />;
   if (role === "pending") return <PendingApprovalScreen />;
 
+  // 'security' is locked to the gate screen; everyone else is locked OUT of /gate.
+  if (role === "security" && location.pathname !== "/gate") {
+    return <Navigate to="/gate" replace />;
+  }
+  if (role !== "security" && location.pathname === "/gate") {
+    return <Navigate to="/capture" replace />;
+  }
+
   if (allowedRoles) {
     if (profileLoading) return <Splash message="Checking access…" />;
     if (!role || !allowedRoles.includes(role)) {
