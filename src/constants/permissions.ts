@@ -13,7 +13,8 @@ export type PermissionKey =
   | "grn_view_own_gate_entries"
   | "grn_verify"
   | "grn_putaway"
-  | "grn_reject";
+  | "grn_reject"
+  | "grn_add_unexpected_line";
 
 export interface PermissionDef {
   key: PermissionKey;
@@ -36,6 +37,7 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: "grn_verify", label: "GRN: verify shipment (Stage 2)" },
   { key: "grn_putaway", label: "GRN: putaway (Stage 3)" },
   { key: "grn_reject", label: "GRN: reject shipment" },
+  { key: "grn_add_unexpected_line", label: "GRN: add unexpected line (Stage 2)" },
 ];
 
 /** Roles whose permissions are editable (admin is locked to full access; pending has none). */
