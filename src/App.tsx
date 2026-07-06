@@ -17,7 +17,7 @@ import { SignUpScreen } from "@/screens/Login/SignUpScreen";
 import { UsersScreen } from "@/screens/Users/UsersScreen";
 import { GateScreen } from "@/screens/Gate/GateScreen";
 import { OpenGrnsScreen } from "@/screens/Grn/OpenGrnsScreen";
-import { GrnVerifyPlaceholder } from "@/screens/Grn/GrnVerifyPlaceholder";
+import { GrnVerifyScreen } from "@/screens/Grn/GrnVerifyScreen";
 import { useAuth } from "@/hooks/useAuth";
 import type { UserRole } from "@/types/profile";
 
@@ -78,7 +78,7 @@ export function App() {
             <Route path="/settings" element={<Navigate to="/more" replace />} />
             <Route path="/users" element={protect(<UsersScreen />)} />
             <Route path="/grn" element={protect(<OpenGrnsScreen />, ["manager", "storekeeper", "admin"])} />
-            <Route path="/grn/:grnId/verify" element={protect(<GrnVerifyPlaceholder />, ["manager", "storekeeper", "admin"])} />
+            <Route path="/grn/:grnId/verify" element={protect(<GrnVerifyScreen />, ["manager", "storekeeper", "admin"])} />
             {/* /gate is full-screen (no AppShell/tab bar); ProtectedRoute locks it to security */}
             <Route path="/gate" element={<ProtectedRoute><GateScreen /></ProtectedRoute>} />
             <Route path="*" element={protect(<Placeholder name="404" />)} />

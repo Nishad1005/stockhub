@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 export {
-  Search, Plus, Check, X, Trash2, Camera, ArrowRight, ArrowLeftRight,
+  Search, Plus, Check, X, Trash2, Camera, ArrowRight, ArrowLeft, ArrowLeftRight,
   ArrowDown, ArrowUp, AlertTriangle,
   Package, BarChart3, Settings, Tag, LayoutGrid, MapPin, Lock, Home, ChevronRight,
   Download, Clock, Image, Menu, LogOut,

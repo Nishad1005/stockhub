@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatWaitingTime, waitingTone } from "./grn";
+import { formatWaitingTime, waitingTone, minutesSince } from "./grn";
 
 describe("formatWaitingTime", () => {
   it("shows minutes up to 90", () => {
@@ -30,5 +30,17 @@ describe("waitingTone", () => {
   it("bad over 60 minutes", () => {
     expect(waitingTone(61)).toBe("bad");
     expect(waitingTone(200)).toBe("bad");
+  });
+});
+
+describe("minutesSince", () => {
+  const now = new Date("2026-07-02T10:00:00Z").getTime();
+  it("computes whole minutes elapsed", () => {
+    expect(minutesSince("2026-07-02T09:13:00Z", now)).toBe(47);
+    expect(minutesSince("2026-07-02T10:00:00Z", now)).toBe(0);
+  });
+  it("clamps future timestamps and invalid input to 0", () => {
+    expect(minutesSince("2026-07-02T10:30:00Z", now)).toBe(0);
+    expect(minutesSince("not-a-date", now)).toBe(0);
   });
 });

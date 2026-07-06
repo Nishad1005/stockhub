@@ -17,3 +17,10 @@ export function formatWaitingTime(minutes: number): string {
   const rem = m % 60;
   return `${h}h ${rem}m`;
 }
+
+/** Whole minutes elapsed since an ISO timestamp, clamped at 0. Invalid → 0. */
+export function minutesSince(iso: string, nowMs: number = Date.now()): number {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return 0;
+  return Math.max(0, Math.floor((nowMs - then) / 60000));
+}
