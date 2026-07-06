@@ -7,7 +7,7 @@ export interface ScreenHeaderProps {
   action?: ReactNode;
 }
 
-export function ScreenHeader({ title, subtitle, eyebrow = "U&M StockHub", action }: ScreenHeaderProps) {
+export function ScreenHeader({ title, subtitle, eyebrow = "U&M Golai", action }: ScreenHeaderProps) {
   return (
     <header className="px-4 pt-5 pb-3 flex items-end justify-between gap-3">
       <div className="min-w-0">

@@ -26,7 +26,7 @@ function truncate(s: string, n: number): string {
   return s.length > n ? s.slice(0, n - 1) + "…" : s;
 }
 
-export async function downloadLabelsPdf(labels: LabelData[], filename = "stockhub-labels.pdf") {
+export async function downloadLabelsPdf(labels: LabelData[], filename = "golai-labels.pdf") {
   const { jsPDF } = await import("jspdf");
   // Label is 100×50mm (landscape). Without orientation:"landscape" jsPDF defaults
   // to portrait and swaps the dimensions to 50×100, cutting off the content.

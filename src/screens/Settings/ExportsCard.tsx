@@ -26,7 +26,7 @@ export function ExportsCard() {
       zoneName: (code) => ZONE_INDEX[code]?.name ?? code,
       section: (e: EntryRow) => (e.master_code ? sectionByCode.get(e.master_code) ?? "" : ""),
     });
-    downloadCsv(`UM_StockHub_Entries_${stamp()}.csv`, csv);
+    downloadCsv(`UM_Golai_Entries_${stamp()}.csv`, csv);
     toast(`Exported ${entries.length} entries`, "ok");
   }
 
@@ -35,7 +35,7 @@ export function ExportsCard() {
       toast("Nothing to export", "warn");
       return;
     }
-    downloadCsv(`UM_StockHub_Transfers_${stamp()}.csv`, buildTransfersCsv(transfers));
+    downloadCsv(`UM_Golai_Transfers_${stamp()}.csv`, buildTransfersCsv(transfers));
     toast(`Exported ${transfers.length} transfers`, "ok");
   }
 

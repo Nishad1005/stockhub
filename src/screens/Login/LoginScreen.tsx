@@ -51,7 +51,7 @@ export function LoginScreen() {
           <div className="text-xs font-bold uppercase tracking-widest text-brand-mute">
             U&amp;M Designs
           </div>
-          <h1 className="text-2xl font-bold mt-1">StockHub</h1>
+          <h1 className="text-2xl font-bold mt-1">Golai</h1>
         </div>
 
         <form

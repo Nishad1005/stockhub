@@ -33,7 +33,7 @@ function Placeholder({ name }: { name: string }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-brand-cream text-brand-ink p-6">
       <div className="text-xs font-bold uppercase tracking-widest text-brand-mute mb-2">
-        U&amp;M StockHub v0.2
+        U&amp;M Golai v0.2
       </div>
       <h1 className="text-2xl font-bold mb-2">{name}</h1>
       <p className="text-sm text-brand-mute mb-4">
