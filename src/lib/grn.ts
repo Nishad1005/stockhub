@@ -24,3 +24,27 @@ export function minutesSince(iso: string, nowMs: number = Date.now()): number {
   if (Number.isNaN(then)) return 0;
   return Math.max(0, Math.floor((nowMs - then) / 60000));
 }
+
+/**
+ * Variance is flagged once a received qty has been entered and it differs from
+ * the invoice qty (GRN Stage 2 receiving). No received qty yet → not a variance.
+ * A received qty against a line with no invoice qty is always a variance.
+ */
+export function computeVarianceFlag(
+  receivedQty: number | null | undefined,
+  invoiceQty: number | null | undefined,
+): boolean {
+  if (receivedQty == null) return false;
+  if (invoiceQty == null) return true;
+  return receivedQty !== invoiceQty;
+}
+
+/**
+ * Next 1-based line number for a GRN: COALESCE(max,0)+1 over the existing line
+ * numbers. Monotonic (never fills gaps) so it respects unique(grn_id, line_number).
+ */
+export function nextLineNumber(existingLineNumbers: readonly number[]): number {
+  let max = 0;
+  for (const n of existingLineNumbers) if (n > max) max = n;
+  return max + 1;
+}

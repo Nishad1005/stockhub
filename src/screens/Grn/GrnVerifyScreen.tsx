@@ -1,14 +1,22 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card } from "@/components/ui/Card";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { ImageLightbox } from "@/components/ui/ImageLightbox";
-import { ArrowLeft } from "@/components/ui/icons";
+import { CameraScanner } from "@/components/CameraScanner";
+import { ArrowLeft, Plus } from "@/components/ui/icons";
+import { useAuth } from "@/hooks/useAuth";
 import { useGrnDetail } from "@/hooks/useGrnDetail";
 import { useGrnActivityLog } from "@/hooks/useGrnActivityLog";
 import { useGrnGateEntryAttachments } from "@/hooks/useGrnGateEntryAttachments";
+import { useGrnLines } from "@/hooks/useGrnLines";
 import { formatWaitingTime, waitingTone, minutesSince } from "@/lib/grn";
+import { errMessage } from "@/lib/errors";
+import { toast } from "@/stores/toast";
+import { GrnLineRow } from "./GrnLineRow";
+import { GrnLineEditor } from "./GrnLineEditor";
 import type { GrnLineDetail } from "@/types/grn";
 
 const STATUS_TONE: Record<string, BadgeTone> = {
@@ -18,23 +26,24 @@ const STATUS_TONE: Record<string, BadgeTone> = {
   REJECTED: "bad",
 };
 
-const QC_TONE: Record<string, BadgeTone> = {
-  PENDING: "neutral",
-  OK: "ok",
-  HOLD: "warn",
-  REJECT: "bad",
-};
-
 const ACTION_LABEL: Record<string, string> = {
   "grn.gate_entry.created": "Gate entry created",
+  "grn.line.added": "Line added",
+  "grn.line.updated": "Line edited",
+  "grn.line.removed": "Line removed",
 };
+
+// The camera re-decodes ~10fps; ignore repeat detections inside this window so
+// one physical scan of an item = one +1 to that line's received qty.
+const RECEIVE_SCAN_COOLDOWN_MS = 1200;
 
 const formatTime = (iso: string) =>
   new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
-/** GRN Stage 2 verification — read-only surface (interactive flow lands in Sprint 2.2b). */
+/** GRN Stage 2 verification — line entry + receiving (Sprint 2.2b-1). QC, unexpected
+ * lines, and submit land in the next prompt; the GRN stays DRAFT throughout. */
 export function GrnVerifyScreen() {
   const { grnId = "" } = useParams<{ grnId: string }>();
   const navigate = useNavigate();
@@ -42,7 +51,16 @@ export function GrnVerifyScreen() {
   const { grn, gateEntry, lines, createdByProfile, isLoading } = useGrnDetail(grnId);
   const { photos } = useGrnGateEntryAttachments(gateEntry?.id ?? null);
   const { events, isLoading: activityLoading } = useGrnActivityLog(grnId);
+  const { isManager } = useAuth();
+  const { setReceivedQty, removeLine } = useGrnLines();
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
+
+  // Line-entry UI state.
+  const [addingLine, setAddingLine] = useState(false);
+  const [editingLine, setEditingLine] = useState<GrnLineDetail | null>(null);
+  const [receiveScanLine, setReceiveScanLine] = useState<GrnLineDetail | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<GrnLineDetail | null>(null);
+  const lastScanRef = useRef(0);
 
   // Live "waiting N min" — re-tick every 60s (a display clock, not a data fetch).
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -50,6 +68,42 @@ export function GrnVerifyScreen() {
     const t = setInterval(() => setNowMs(Date.now()), 60_000);
     return () => clearInterval(t);
   }, []);
+
+  function handleReceiveScan(decoded: string) {
+    void decoded; // any successful decode counts one unit onto the active line
+    const line = receiveScanLine;
+    if (!line) return;
+    const now = Date.now();
+    if (now - lastScanRef.current < RECEIVE_SCAN_COOLDOWN_MS) return;
+    lastScanRef.current = now;
+    setReceivedQty.mutate(
+      { id: line.id, grnId, mode: "increment" },
+      {
+        onSuccess: (updated) => toast(`${updated.itemName}: received ${updated.receivedQty}`, "ok"),
+        onError: (e) => toast("Scan failed: " + errMessage(e), "err"),
+      },
+    );
+  }
+
+  function handleSetReceived(line: GrnLineDetail, absolute: number) {
+    setReceivedQty.mutate(
+      { id: line.id, grnId, mode: "absolute", value: absolute },
+      { onError: (e) => toast("Update failed: " + errMessage(e), "err") },
+    );
+  }
+
+  function confirmRemove() {
+    const t = removeTarget;
+    if (!t) return;
+    removeLine.mutate(
+      { id: t.id, grnId, lineNumber: t.lineNumber, itemName: t.itemName },
+      {
+        onSuccess: () => toast(`Removed line ${t.lineNumber}`, "ok"),
+        onError: (e) => toast("Remove failed: " + errMessage(e), "err"),
+      },
+    );
+    setRemoveTarget(null);
+  }
 
   if (isLoading) {
     return (
@@ -84,8 +138,8 @@ export function GrnVerifyScreen() {
 
   const anchorTs = gateEntry?.gateInAt ?? grn.createdAt;
   const waitingMinutes = minutesSince(anchorTs, nowMs);
-  const headerTone =
-    grn.status === "DRAFT" ? waitingTone(waitingMinutes) : STATUS_TONE[grn.status] ?? "neutral";
+  const isDraft = grn.status === "DRAFT";
+  const headerTone = isDraft ? waitingTone(waitingMinutes) : STATUS_TONE[grn.status] ?? "neutral";
 
   return (
     <div className="min-h-screen bg-brand-cream text-brand-ink">
@@ -165,19 +219,66 @@ export function GrnVerifyScreen() {
 
         {/* LINES */}
         <section>
-          <SectionHeading>Lines ({lines.length})</SectionHeading>
+          <div className="flex items-center justify-between mb-2 px-1">
+            <h2 className="text-xs font-bold uppercase tracking-wide text-brand-mute">
+              Lines ({lines.length})
+            </h2>
+            {isDraft && !addingLine && !editingLine && (
+              <Button
+                size="sm"
+                variant="secondary"
+                icon={<Plus className="w-4 h-4" />}
+                onClick={() => {
+                  setEditingLine(null);
+                  setAddingLine(true);
+                }}
+              >
+                Add line
+              </Button>
+            )}
+          </div>
+
+          {isDraft && (addingLine || editingLine) && (
+            <div className="mb-3">
+              <GrnLineEditor
+                grnId={grnId}
+                line={editingLine}
+                onDone={() => {
+                  setAddingLine(false);
+                  setEditingLine(null);
+                }}
+              />
+            </div>
+          )}
+
           <Card className="p-4">
             {lines.length === 0 ? (
               <div className="text-center py-4 space-y-1.5">
-                <p className="text-sm font-semibold text-brand-ink">Empty — verification not started.</p>
+                <p className="text-sm font-semibold text-brand-ink">
+                  {isDraft ? "No lines yet." : "No lines recorded."}
+                </p>
                 <p className="text-sm text-brand-mute">
-                  Storekeeper will transcribe invoice lines and scan received items here (Sprint 2.2b).
+                  {isDraft
+                    ? "Add invoice lines above, then record received quantities by scan or manual entry."
+                    : "Verification recorded no lines."}
                 </p>
               </div>
             ) : (
               <ul className="divide-y divide-brand-line">
                 {lines.map((l) => (
-                  <LineRow key={l.id} line={l} />
+                  <GrnLineRow
+                    key={l.id}
+                    line={l}
+                    isDraft={isDraft}
+                    canRemove={isManager}
+                    onScanReceive={setReceiveScanLine}
+                    onSetReceived={handleSetReceived}
+                    onEdit={(ln) => {
+                      setAddingLine(false);
+                      setEditingLine(ln);
+                    }}
+                    onRemove={setRemoveTarget}
+                  />
                 ))}
               </ul>
             )}
@@ -217,6 +318,36 @@ export function GrnVerifyScreen() {
       {lightbox && (
         <ImageLightbox src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox(null)} />
       )}
+
+      {/* Receive-by-scan: each decode bumps the active line by 1; stays open to
+          count multiple units. Manual override is the numeric field on the row. */}
+      <CameraScanner
+        open={receiveScanLine != null}
+        title={receiveScanLine ? `Scan to receive · ${receiveScanLine.itemName}` : "Scan to receive"}
+        onClose={() => setReceiveScanLine(null)}
+        onDetected={handleReceiveScan}
+      />
+
+      {removeTarget && (
+        <Modal
+          title="Remove line?"
+          onClose={() => setRemoveTarget(null)}
+          footer={
+            <>
+              <Button variant="secondary" fullWidth onClick={() => setRemoveTarget(null)}>
+                Cancel
+              </Button>
+              <Button variant="bad" fullWidth onClick={confirmRemove}>
+                Remove
+              </Button>
+            </>
+          }
+        >
+          <p className="text-sm text-brand-ink">
+            Remove line {removeTarget.lineNumber} — <b>{removeTarget.itemName}</b>? This can't be undone.
+          </p>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -231,35 +362,5 @@ function DetailRow({ label, value, mono }: { label: string; value: string; mono?
       <dt className="w-20 shrink-0 text-brand-mute">{label}</dt>
       <dd className={`min-w-0 flex-1 text-brand-ink ${mono ? "font-mono" : ""}`}>{value}</dd>
     </div>
-  );
-}
-
-function LineRow({ line }: { line: GrnLineDetail }) {
-  return (
-    <li className="py-2">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="text-sm font-medium text-brand-ink truncate">
-            <span className="text-brand-mute font-mono mr-1">{line.lineNumber}.</span>
-            {line.itemName}
-            {line.isUnexpected && (
-              <Badge tone="warn" className="ml-1">
-                unexpected
-              </Badge>
-            )}
-          </div>
-          {line.itemCode && <div className="font-mono text-[11px] text-brand-mute">{line.itemCode}</div>}
-        </div>
-        <Badge tone={QC_TONE[line.qcStatus] ?? "neutral"} className="shrink-0">
-          {line.qcStatus}
-        </Badge>
-      </div>
-      <div className="text-xs text-brand-mute mt-0.5">
-        {line.invoiceQty != null && <>Inv {line.invoiceQty} · </>}
-        {line.receivedQty != null ? <>Recv {line.receivedQty}</> : "not received"}
-        {line.varianceFlag && <span className="text-brand-bad"> · variance</span>}
-      </div>
-      {line.qcNotes && <div className="text-xs text-brand-mute mt-0.5">{line.qcNotes}</div>}
-    </li>
   );
 }

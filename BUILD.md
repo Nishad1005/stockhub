@@ -1,9 +1,38 @@
-# BUILD.md — StockHub v0.2 Build Plan
+# BUILD.md — Golai (StockHub v0.2) Build Plan
 
-> **Current phase**: 🟢 Phases 0–8 done + **live on Netlify** — Capture (incl. item-barcode scan + photo), Items/edit/delete + section filter, **Transfers + STN**, **Stock IN/OUT + GRN/MIR**, **Find/Dashboard + Alerts**, **Barcodes** (assign ITM codes + PDF labels + shelf reprint), **Settings/More** (exports, access controls, edit-lock), auth + roles + 10 granular permissions, **6-tab nav** (`Capture · Items · Movements · Find · Barcodes · More`; Movements is a hub with `Transfers | Stock` toggle; More is the renamed Settings; `/transfers`·`/stock` → `/movements` and `/settings` → `/more` redirect). Supabase live (`ocqfpmealzautpsvxuij`); **4,877-item master** (4,561 base + 316 June append) with 6-category + 13-section taxonomy (migration 0008 + `master_enrichment.sql`, applied); 612-shelf registry (migration 0014); `entry-photos` Storage bucket live (confirmed 2026-06-26); `npm run build` green (**85 tests**). Tested on phone via Netlify HTTPS — scanning, transfers, stock IN/OUT, barcodes, exports all confirmed working. Remaining: Phase 9+ (native scanner, offline-first, inventory).
-> **UI design system + nav redesign**: both merged to `main`. Design-system layer in `src/components/ui/` (Button incl. ok/bad variants, Badge, Chip, Card, Field, ScreenHeader, SearchField, Modal; lucide icons via `icons.ts` / ADR 0002); full "Warm & Polished" sweep across all screens + modals; Barcodes screen reorganised into two-tab layout (Item barcodes with zone filter chips | Shelf labels reprint). Gate: `tsc --noEmit` clean, `npm run build` green, 85 tests passed.
-> **Started**: TBD
-> **Target v0.2 launch**: TBD
+> **Rebrand note (2026-07-06)**: the product is now user-facing branded **"Golai"**
+> (commit `3f6b111`). This is a display-name change only — the repo, `package.json`
+> name (`stockhub-v0.2`), Supabase project, and Capacitor bundle id
+> (`com.dbbsgroup.umstockhub`) are unchanged, so "StockHub v0.2" still names the
+> codebase/version throughout this doc. Open rebrand items: `favicon.svg` is
+> referenced by `index.html` but **absent** (needs a Golai favicon asset);
+> `capacitor.config.ts` `appName: "U&M StockHub"` (native home-screen label) is
+> unchanged pending a decision.
+>
+> **Current state (2026-07-06)**: 🟢 **StockHub core (Phases 0–8) complete + live on Netlify**,
+> **now extended by the Aksure GRN module (in progress)**.
+> Core: Capture (item-barcode scan + photo), Items/edit/delete + section filter,
+> **Transfers + STN**, **Stock IN/OUT + GRN/MIR**, **Find/Dashboard + Alerts**,
+> **Barcodes** (assign ITM codes + PDF labels + shelf reprint), **More** (exports,
+> access controls, edit-lock), auth + roles + 10 granular permissions, **6-tab nav**
+> (`Capture · Items · Movements · Find · Barcodes · More`; Movements is a hub with a
+> `Transfers | Stock` toggle; More is the renamed Settings; `/transfers`·`/stock` →
+> `/movements` and `/settings` → `/more` redirect). Supabase live (`ocqfpmealzautpsvxuij`);
+> **~4,877-item master** (4,561 base + 316 June append) with 6-category + 13-section
+> taxonomy (migration 0008 + `master_enrichment.sql`); 612-shelf registry (migration 0014);
+> `entry-photos` Storage bucket live (confirmed 2026-06-26). **19 migrations** (`0001`–`0019`).
+> Gate: `tsc --noEmit` clean, `npm run build` green, **118 tests** (24 files). Tested on
+> phone via Netlify HTTPS — scanning, transfers, stock IN/OUT, barcodes, exports confirmed.
+> **Aksure GRN module** (goods-receipt, built on the core): Sprint 0 foundation +
+> Sprint 1 (Security gate entry) + Sprint 2.1/2.2a + **2.2b-1 (line entry + receiving)** done;
+> **Sprint 2.2b-2 (QC + submit) is the active next step** — see the Aksure section below.
+> Remaining core phases: 9+ (native scanner, offline-first, iOS/Android wrap, hardening).
+> **UI design system + nav redesign**: both merged to `main`. Design-system layer in
+> `src/components/ui/` (Button incl. ok/bad variants, Badge, Chip, Card, Field,
+> ScreenHeader, SearchField, Modal; lucide icons via `icons.ts` / ADR 0002); full
+> "Warm & Polished" sweep across all screens + modals; Barcodes reorganised into a
+> two-tab layout (Item barcodes with zone filter chips | Shelf labels reprint).
+> **Started**: 2026-06-05 · **Target v0.2 launch**: TBD
 >
 > See [`docs/STATUS.md`](docs/STATUS.md) for a plain-language status + getting-started guide.
 
@@ -36,6 +65,18 @@ next phase until they're met.
 
 **Rough total**: 60-90 hours of focused build time. Realistically 3-5 weeks
 calendar time with feedback loops.
+
+### Aksure GRN module (parallel workstream, built on the finished core)
+
+| Sprint | Deliverable | Status |
+|--------|-------------|--------|
+| 0 | Foundation — `tenants`, `attachments`, append-only `activity_log` (0015) + helpers | 🟢 done |
+| 1 | GRN Stage 1 — `security` role, `grns` + `grn_gate_entries` (0016/0017), `/gate` Security entry, storage policies (0018) | 🟢 done |
+| 1.3 | "Open GRNs" Dashboard tile → list → verify screen | 🟢 done |
+| 2.1 | `grn_lines` schema (0019) — QC status, variance, unique line no. | 🟢 done |
+| 2.2a | Read-only GRN verification surface (`GrnVerifyScreen` + detail/activity/attachment hooks) | 🟢 done |
+| 2.2b-1 | Line entry + receiving — add/edit/remove lines (scan/typeahead/NEW), scan+manual received qty, variance (`useGrnLines`, `GrnLineEditor`, `GrnLineRow`) | 🟢 done |
+| 2.2b-2 | QC dropdowns (OK/HOLD/REJECT) + notes/damage photos, add-unexpected-line, submit DRAFT→VERIFIED/REJECTED | ⬜ next |
 
 Status legend: 🟢 done · 🟡 in progress · ⬜ not started · 🔴 blocked
 
@@ -293,6 +334,61 @@ plan: `docs/superpowers/plans/2026-06-15-transfers-stn.md`.
 - [x] Edit-lock window change takes effect immediately
 - [x] Toggle persists for session, resets on reload
 - [ ] Password change validates current password — deferred
+
+---
+
+## Aksure GRN module (goods-receipt workflow)
+
+**Goal**: capture supplier deliveries end-to-end — Security logs the vehicle at the
+gate (Stage 1), then a Storekeeper/Manager verifies invoice lines against received
+goods with QC (Stage 2) — layered on top of the finished core without disturbing it.
+
+**Foundation primitives** (reused by all sprints): `tenants` (single tenant
+`CURRENT_TENANT_ID` in `src/constants/tenant.ts`), `attachments` (`useAttachments`,
+bucket `aksure-attachments`), append-only `activity_log` (`logActivity`, fire-and-forget).
+
+> Migrations `0015`–`0019` and the `aksure-attachments` bucket are **owner-applied** —
+> the repo holds the SQL/policies; the live features work only once `db push` + bucket
+> creation are done. `activity_log` read RLS is **manager/admin-only** (storekeepers see
+> an empty timeline). `next_grn_number` is shared with Stock IN, so GRN numbers interleave.
+
+### Sprint 0 — Foundation (0015) — 🟢 done
+- [x] `tenants`, `attachments`, `activity_log` (+ append-only trigger) — migration 0015
+- [x] `src/constants/tenant.ts`, `src/hooks/useAttachments.ts`, `src/lib/activity.ts`
+- [x] Dev reference `docs/AKSURE-FOUNDATION.md`
+
+### Sprint 1 — GRN Stage 1: Security gate entry (0016/0017/0018) — 🟢 done
+- [x] Extend `user_role` enum with `security` (migration 0016, own txn)
+- [x] `grns` + `grn_gate_entries` tables + RLS + permission-key seed (migration 0017)
+- [x] `/gate` full-screen Security entry screen (vehicle, driver, photos) — no tab bar, security-gated
+- [x] Storage policies for `aksure-attachments` (migration 0018)
+- [x] (1.3) "Open GRNs" Dashboard tile → full list → verify screen
+
+### Sprint 2 — GRN Stage 2: verification
+- [x] **2.1** `grn_lines` schema — migration 0019 (QC PENDING/OK/HOLD/REJECT, variance flag, unique `line_number`) — 🟢 done
+- [x] **2.2a** Read-only verification surface — 🟢 done
+  - `src/screens/Grn/GrnVerifyScreen.tsx` (replaces the placeholder): gate-entry details +
+    photo strip (lightbox), read-only lines with a "Sprint 2.2b" empty state, activity timeline
+  - Hooks: `useGrnDetail`, `useGrnActivityLog`, `useGrnGateEntryAttachments`; `ImageLightbox`;
+    `lib/grn.ts` `minutesSince` (+ tests); `types/grn.ts`
+- [x] **2.2b-1** Line entry + receiving — 🟢 done
+  - `useGrnLines` (add/update/remove + setReceived: increment via scan, absolute via manual field);
+    `line_number` = COALESCE(max,0)+1 with unique-violation retry; activity_log on add/edit/remove
+  - `GrnLineEditor` (three item paths — scan → master lookup, typeahead, NEW `item_code=null`; PO/invoice qty)
+  - `GrnLineRow` (PO | Invoice | Received compare; Received scan-to-increment + always-editable manual
+    override; `computeVarianceFlag`, variance chip in existing tones)
+  - Fixed `CameraScanner` remount/async-lifecycle bug (stable ref region id + guarded start/stop) that
+    blocked scan detection on this screen
+  - Remove gated to manager/admin (0019 RLS: delete is a manager escalation); QC/submit deferred
+- [ ] **2.2b-2** QC + submit — ⬜ **next**
+  - Per-line QC (OK/HOLD/REJECT) + `qc_notes` / damage photos; add unexpected lines (`is_unexpected`)
+  - Submit DRAFT → VERIFIED / REJECTED; "Reject shipment" action; write `activity_log` events
+
+### Acceptance (module)
+- [x] Security can log a gate entry with photos; it appears as an Open GRN
+- [x] Manager/Storekeeper can open a GRN and see gate details, photos, and timeline (read-only)
+- [x] Storekeeper can transcribe invoice lines and record received qty by scan or manual entry (2.2b-1)
+- [ ] Storekeeper can set per-line QC and submit the GRN (2.2b-2)
 
 ---
 
